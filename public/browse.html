@@ -287,7 +287,11 @@
       grid.innerHTML = pagePrompts.map(p => {
         const isFree = p.type === 'free';
         const isUnlocked = isVip || isFree;
-        const thumbUrl = p.thumbnail ? (p.thumbnail.startsWith('/') ? p.thumbnail : '/' + p.thumbnail) : '/uploads/prompt_287_thumb.png';
+        const thumbUrl = p.thumbnail
+          ? (p.thumbnail.startsWith('http://') || p.thumbnail.startsWith('https://')
+              ? p.thumbnail
+              : (p.thumbnail.startsWith('/') ? p.thumbnail : '/' + p.thumbnail))
+          : '';
         const detailUrl = `prompt.html?id=${p.numericId || p.id}`;
 
         // Action button matching SoniPrompts exactly
@@ -314,7 +318,7 @@
           <div class="pcard ${!isUnlocked && p.type === 'premium' ? 'locked' : ''}">
             <div class="pcard-thumb">
               <a href="${detailUrl}" style="display:block;width:100%;height:100%;">
-                <img src="${thumbUrl}" alt="${p.title}" loading="lazy" decoding="async" width="660" height="371" onerror="this.onerror=null;this.src='/uploads/prompt_287_thumb.png';">
+                <img src="${thumbUrl}" alt="${p.title}" loading="lazy" decoding="async" width="660" height="371">
               </a>
               ${badgeHtml}
             </div>
