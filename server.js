@@ -343,7 +343,7 @@ app.get('/api/prompts', (req, res) => {
 });
 
 // 2. Get Single Prompt (Supports Login & VIP unlock check)
-app.get('/api/prompts/:id', (req, res) => {
+app.get('/api/prompts/:id', async (req, res) => {
   const db = readDatabase();
   const prompt = (db.prompts || []).find(p => p.id === req.params.id || String(p.numericId) === req.params.id);
   if (!prompt) {
@@ -356,19 +356,30 @@ app.get('/api/prompts/:id', (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '').trim() || (req.query.token ? req.query.token.trim() : '');
   if (token) {
-    const userId = getUserIdFromToken(token);
-    let user = null;
-    if (userId) {
-      user = (db.users || []).find(u => u.id === userId || u.email.toLowerCase() === userId.toLowerCase());
-    }
-    if (!user) {
-      user = (db.users || []).find(u => u.id === token || u.email.toLowerCase() === token.toLowerCase());
-    }
-    if (user) {
-      isLoggedIn = true;
-      const sub = evaluateSubscription(user);
-      if (sub.isActive) {
-        isVip = true;
+    try {
+      const cloudUser = await getCloudUserProfile(token);
+      if (cloudUser) {
+        isLoggedIn = true;
+        if (cloudUser.subscription && cloudUser.subscription.isActive) {
+          isVip = true;
+        }
+      }
+    } catch (e) {
+      // Fallback to local DB check
+      const userId = getUserIdFromToken(token);
+      let user = null;
+      if (userId) {
+        user = (db.users || []).find(u => u.id === userId || u.email.toLowerCase() === userId.toLowerCase());
+      }
+      if (!user) {
+        user = (db.users || []).find(u => u.id === token || u.email.toLowerCase() === token.toLowerCase());
+      }
+      if (user) {
+        isLoggedIn = true;
+        const sub = evaluateSubscription(user);
+        if (sub.isActive) {
+          isVip = true;
+        }
       }
     }
   }
