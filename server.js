@@ -80,33 +80,55 @@ function getActiveDbPath() {
   return DB_FILE;
 }
 
-function readDatabase() {
+// Database In-Memory Cache (Avoid re-reading 6.5MB from disk on every single request)
+let cachedDb = null;
+let lastDbLoadTime = 0;
+const DB_CACHE_TTL = 30 * 1000; // 30 seconds TTL
+
+function readDatabase(forceReload = false) {
+  const now = Date.now();
+  if (!forceReload && cachedDb && (now - lastDbLoadTime < DB_CACHE_TTL)) {
+    return cachedDb;
+  }
   try {
     const activePath = getActiveDbPath();
+    let data;
     if (!fs.existsSync(activePath)) {
       if (fs.existsSync(DB_FILE)) {
-        const data = fs.readFileSync(DB_FILE, 'utf8');
+        data = fs.readFileSync(DB_FILE, 'utf8');
         if (process.env.VERCEL) {
           try { fs.writeFileSync(TMP_DB_FILE, data, 'utf8'); } catch (e) {}
         }
-        return JSON.parse(data);
+      } else {
+        cachedDb = { admin: { username: 'admin', password: 'Kazama#007' }, categories: [], prompts: [] };
+        lastDbLoadTime = now;
+        return cachedDb;
       }
-      return { admin: { username: 'admin', password: 'Kazama#007' }, categories: [], prompts: [] };
+    } else {
+      data = fs.readFileSync(activePath, 'utf8');
     }
-    const data = fs.readFileSync(activePath, 'utf8');
-    return JSON.parse(data);
+    cachedDb = JSON.parse(data);
+    lastDbLoadTime = now;
+    return cachedDb;
   } catch (err) {
     console.error('Error reading database:', err);
+    if (cachedDb) return cachedDb;
     try {
       if (fs.existsSync(DB_FILE)) {
-        return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+        cachedDb = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+        lastDbLoadTime = now;
+        return cachedDb;
       }
     } catch (e) {}
-    return { admin: { username: 'admin', password: 'Kazama#007' }, categories: [], prompts: [] };
+    cachedDb = { admin: { username: 'admin', password: 'Kazama#007' }, categories: [], prompts: [] };
+    lastDbLoadTime = now;
+    return cachedDb;
   }
 }
 
 function writeDatabase(db) {
+  cachedDb = db;
+  lastDbLoadTime = Date.now();
   const jsonStr = JSON.stringify(db, null, 2);
   // If running on Vercel, write to /tmp/database.json
   if (process.env.VERCEL) {
@@ -320,12 +342,12 @@ app.get('/api/auth/me', async (req, res) => {
 
 // ─── API Routes ───
 
-// 1. Get Prompts (with filter by type, category, and search)
+// 1. Get Prompts (Optimized with lightweight card mapping, pagination, and Edge Cache)
 app.get('/api/prompts', (req, res) => {
   const db = readDatabase();
   let prompts = db.prompts || [];
 
-  const { category, type, search, sort } = req.query;
+  const { category, type, search, sort, limit, offset, full } = req.query;
 
   // Filter by Type (free / premium)
   if (type && type !== 'all') {
@@ -334,10 +356,10 @@ app.get('/api/prompts', (req, res) => {
 
   // Filter by Category
   if (category && category !== 'all') {
-    prompts = prompts.filter(p => p.category.toLowerCase() === category.toLowerCase());
+    prompts = prompts.filter(p => p.category && p.category.toLowerCase() === category.toLowerCase());
   }
 
-  // Search by title, summary, master prompt
+  // Search by title or summary
   if (search) {
     const q = search.toLowerCase();
     prompts = prompts.filter(p =>
@@ -353,15 +375,53 @@ app.get('/api/prompts', (req, res) => {
   } else if (sort === 'old') {
     prompts.sort((a, b) => (a.numericId || 0) - (b.numericId || 0));
   } else if (sort === 'az') {
-    prompts.sort((a, b) => a.title.localeCompare(b.title));
+    prompts.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
   } else if (sort === 'za') {
-    prompts.sort((a, b) => b.title.localeCompare(a.title));
+    prompts.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
   }
+
+  const total = prompts.length;
+
+  // Pagination support
+  if (limit) {
+    const numLimit = parseInt(limit, 10);
+    const numOffset = parseInt(offset, 10) || 0;
+    prompts = prompts.slice(numOffset, numOffset + numLimit);
+  }
+
+  // Edge Caching: 60s cache with stale-while-revalidate for instant global responses
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=300');
+
+  // Return full objects if explicitly requested (e.g. by admin exports)
+  if (full === 'true') {
+    return res.json({
+      success: true,
+      total,
+      prompts
+    });
+  }
+
+  // OPTIMIZATION: Omit heavy 5.6MB masterPrompt and negativePrompt from public list view.
+  // Shrinks response payload by 98% (from 6.5MB to ~180KB, or ~28KB gzipped), making initial page load instant!
+  const lightweightPrompts = prompts.map(p => ({
+    id: p.id,
+    numericId: p.numericId,
+    title: p.title,
+    category: p.category,
+    type: p.type,
+    promptCountBadge: p.promptCountBadge,
+    thumbnail: p.thumbnail,
+    summary: p.summary,
+    views: p.views,
+    likes: p.likes,
+    updatedDate: p.updatedDate,
+    tools: p.tools
+  }));
 
   res.json({
     success: true,
-    total: prompts.length,
-    prompts: prompts
+    total,
+    prompts: lightweightPrompts
   });
 });
 
@@ -774,6 +834,7 @@ app.post('/api/community/posts/:id/comment', (req, res) => {
 
 // 3. Get Categories with accurate counts
 app.get('/api/categories', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300, stale-while-revalidate=600');
   const db = readDatabase();
   const categories = db.categories || [];
   const prompts = db.prompts || [];

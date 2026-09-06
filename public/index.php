@@ -185,7 +185,7 @@ include __DIR__ . '/includes/header.php';
 
     async function loadPrompts() {
       try {
-        const res = await fetch('/api/prompts');
+        const res = await fetch('/api/prompts?limit=30');
         const data = await res.json();
         allPromptsCache = data.prompts || [];
         renderAllPrompts();
