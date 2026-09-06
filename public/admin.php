@@ -154,6 +154,26 @@
               </div>
             </div>
 
+            <div class="form-group" style="background:#fff;border:1.5px dashed var(--border);border-radius:14px;padding:16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+                <label style="font-weight:700;margin:0;display:flex;align-items:center;gap:6px;">
+                  🎬 STORYBOARD &amp; REFERENCE IMAGES
+                  <span style="font-size:11px;font-weight:600;color:var(--primary);background:var(--primary-light);padding:2px 8px;border-radius:999px;">Optional</span>
+                </label>
+                <span style="font-size:12px;color:var(--muted);">Upload 1 or more scene frames / references</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <input type="file" id="pStoryboardFile" accept="image/*" multiple class="form-control" style="flex:1;min-width:220px;" onchange="handleStoryboardUpload(this, 'publish')">
+                <span style="font-size:13px;color:var(--muted);">OR</span>
+                <input type="text" id="pStoryboardUrlInput" class="form-control" placeholder="Paste image URL (https://...)" style="flex:1;min-width:220px;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="addStoryboardUrl('publish')" style="white-space:nowrap;padding:9px 16px;border-radius:10px;">+ Add URL</button>
+              </div>
+              <div id="pStoryboardUploading" style="display:none;font-size:13px;color:var(--primary);margin-top:8px;font-weight:600;">
+                ⏳ Uploading image(s)... please wait
+              </div>
+              <div id="pStoryboardGallery" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;"></div>
+            </div>
+
             <div class="form-group">
               <label>SHORT SUMMARY / HOOK</label>
               <input type="text" id="pSummary" class="form-control" placeholder="1-sentence viral hook description for subscribers">
@@ -325,9 +345,35 @@
           </div>
         </div>
         <div class="form-group">
-          <label>THUMBNAIL URL</label>
-          <input type="text" id="editThumbnail" class="form-control">
+          <label>THUMBNAIL IMAGE</label>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <input type="file" id="editThumbFile" accept="image/*" class="form-control" style="flex:1;min-width:200px;" onchange="handleEditThumbnailUpload(this)">
+            <input type="text" id="editThumbnail" class="form-control" placeholder="https://..." style="flex:1;min-width:200px;" oninput="updateEditThumbPreview()">
+          </div>
+          <div id="editThumbPreviewBox" style="margin-top:8px;">
+            <img id="editThumbPreviewImg" src="" style="width:120px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+          </div>
         </div>
+
+        <div class="form-group" style="background:#fff;border:1.5px dashed var(--border);border-radius:14px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:gap;gap:8px;">
+            <label style="font-weight:700;margin:0;display:flex;align-items:center;gap:6px;">
+              🎬 STORYBOARD &amp; REFERENCE IMAGES
+            </label>
+            <span style="font-size:12px;color:var(--muted);">Attached to this prompt</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <input type="file" id="editStoryboardFile" accept="image/*" multiple class="form-control" style="flex:1;min-width:200px;" onchange="handleStoryboardUpload(this, 'edit')">
+            <span style="font-size:13px;color:var(--muted);">OR</span>
+            <input type="text" id="editStoryboardUrlInput" class="form-control" placeholder="Paste image URL (https://...)" style="flex:1;min-width:200px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="addStoryboardUrl('edit')" style="white-space:nowrap;padding:9px 16px;border-radius:10px;">+ Add URL</button>
+          </div>
+          <div id="editStoryboardUploading" style="display:none;font-size:13px;color:var(--primary);margin-top:8px;font-weight:600;">
+            ⏳ Uploading image(s)... please wait
+          </div>
+          <div id="editStoryboardGallery" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;"></div>
+        </div>
+
         <div class="form-group">
           <label>MASTER PROMPT</label>
           <textarea id="editMasterPrompt" rows="6" class="form-control" style="font-family:monospace;font-size:13px;" required></textarea>
@@ -457,6 +503,90 @@
       }
     }
 
+    let publishStoryboardImages = [];
+    let editStoryboardImages = [];
+
+    // Storyboard Gallery Helpers
+    function renderStoryboardGallery(mode) {
+      const isPublish = mode === 'publish';
+      const container = document.getElementById(isPublish ? 'pStoryboardGallery' : 'editStoryboardGallery');
+      const list = isPublish ? publishStoryboardImages : editStoryboardImages;
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '<span style="font-size:12px;color:var(--muted);font-style:italic;">No storyboard reference images attached yet</span>';
+        return;
+      }
+
+      container.innerHTML = list.map((url, idx) => `
+        <div style="position:relative;width:115px;height:75px;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);box-shadow:var(--shadow-sm);background:#0d0b14;flex-shrink:0;">
+          <img src="${url}" alt="Storyboard ${idx+1}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'">
+          <button type="button" onclick="removeStoryboardImage('${mode}', ${idx})" title="Remove Image" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,0.9);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;line-height:1;box-shadow:0 2px 5px rgba(0,0,0,0.3);">✕</button>
+          <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.7);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;">#${idx + 1}</span>
+        </div>
+      `).join('');
+    }
+
+    function removeStoryboardImage(mode, idx) {
+      if (mode === 'publish') {
+        publishStoryboardImages.splice(idx, 1);
+        renderStoryboardGallery('publish');
+      } else {
+        editStoryboardImages.splice(idx, 1);
+        renderStoryboardGallery('edit');
+      }
+    }
+
+    function addStoryboardUrl(mode) {
+      const input = document.getElementById(mode === 'publish' ? 'pStoryboardUrlInput' : 'editStoryboardUrlInput');
+      const url = (input.value || '').trim();
+      if (!url) return;
+      if (mode === 'publish') {
+        publishStoryboardImages.push(url);
+        renderStoryboardGallery('publish');
+      } else {
+        editStoryboardImages.push(url);
+        renderStoryboardGallery('edit');
+      }
+      input.value = '';
+    }
+
+    async function handleStoryboardUpload(input, mode) {
+      if (!input.files || input.files.length === 0) return;
+      const isPublish = mode === 'publish';
+      const loader = document.getElementById(isPublish ? 'pStoryboardUploading' : 'editStoryboardUploading');
+      if (loader) loader.style.display = 'block';
+
+      const formData = new FormData();
+      for (let i = 0; i < input.files.length; i++) {
+        formData.append('files', input.files[i]);
+      }
+
+      try {
+        const res = await fetch('/api/admin/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          const addedUrls = data.urls && data.urls.length > 0 ? data.urls : (data.url ? [data.url] : []);
+          if (isPublish) {
+            publishStoryboardImages.push(...addedUrls);
+            renderStoryboardGallery('publish');
+          } else {
+            editStoryboardImages.push(...addedUrls);
+            renderStoryboardGallery('edit');
+          }
+        } else {
+          alert('Upload failed: ' + (data.message || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Upload error: ' + err.message);
+      } finally {
+        if (loader) loader.style.display = 'none';
+        input.value = '';
+      }
+    }
+
     // Upload Thumbnail
     async function handleThumbnailUpload(input) {
       if (!input.files || !input.files[0]) return;
@@ -479,6 +609,39 @@
       }
     }
 
+    async function handleEditThumbnailUpload(input) {
+      if (!input.files || !input.files[0]) return;
+      const formData = new FormData();
+      formData.append('thumbnail', input.files[0]);
+
+      try {
+        const res = await fetch('/api/admin/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('editThumbnail').value = data.url;
+          const previewImg = document.getElementById('editThumbPreviewImg');
+          if (previewImg) previewImg.src = data.url;
+          const previewBox = document.getElementById('editThumbPreviewBox');
+          if (previewBox) previewBox.style.display = 'block';
+        }
+      } catch(err) {
+        alert('Thumbnail upload failed: ' + err.message);
+      }
+    }
+
+    function updateEditThumbPreview() {
+      const url = document.getElementById('editThumbnail').value.trim();
+      const previewImg = document.getElementById('editThumbPreviewImg');
+      const previewBox = document.getElementById('editThumbPreviewBox');
+      if (url && previewImg) {
+        previewImg.src = url;
+        if (previewBox) previewBox.style.display = 'block';
+      }
+    }
+
     // Publish Prompt
     async function handlePublishPrompt(e) {
       e.preventDefault();
@@ -491,6 +654,7 @@
         category: document.getElementById('pCategory').value,
         type: document.getElementById('pType').value,
         thumbnail: document.getElementById('pThumbUrl').value || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
+        storyboardImages: publishStoryboardImages,
         summary: document.getElementById('pSummary').value,
         masterPrompt: document.getElementById('pMasterPrompt').value,
         negativePrompt: document.getElementById('pNegativePrompt').value,
@@ -508,6 +672,8 @@
           alert('✅ Prompt published successfully! It is now live on the website.');
           document.getElementById('publishForm').reset();
           document.getElementById('thumbPreviewBox').style.display = 'none';
+          publishStoryboardImages = [];
+          renderStoryboardGallery('publish');
           loadAdminData();
           switchAdminTab('manage');
         } else {
@@ -545,7 +711,10 @@
           <td>
             <img src="${p.thumbnail}" style="width:60px;height:38px;object-fit:cover;border-radius:6px;">
           </td>
-          <td><strong>${p.title}</strong></td>
+          <td>
+            <strong>${p.title}</strong>
+            ${p.storyboardImages && p.storyboardImages.length > 0 ? `<span style="font-size:11px;background:#FEF3C7;color:#B45309;padding:2px 7px;border-radius:6px;font-weight:600;margin-left:6px;display:inline-flex;align-items:center;gap:3px;" title="${p.storyboardImages.length} Storyboard image(s)">🎬 ${p.storyboardImages.length}</span>` : ''}
+          </td>
           <td><span class="prow-cat">${p.category}</span></td>
           <td>
             <span class="prow-price ${p.type === 'free' ? 'is-free' : ''}">
@@ -570,8 +739,18 @@
       document.getElementById('editTitle').value = p.title;
       document.getElementById('editCategory').value = p.category;
       document.getElementById('editType').value = p.type;
-      document.getElementById('editThumbnail').value = p.thumbnail;
+      document.getElementById('editThumbnail').value = p.thumbnail || '';
       document.getElementById('editMasterPrompt').value = p.masterPrompt;
+
+      const editPreviewImg = document.getElementById('editThumbPreviewImg');
+      const editPreviewBox = document.getElementById('editThumbPreviewBox');
+      if (editPreviewImg && p.thumbnail) {
+        editPreviewImg.src = p.thumbnail;
+        if (editPreviewBox) editPreviewBox.style.display = 'block';
+      }
+
+      editStoryboardImages = Array.isArray(p.storyboardImages) ? [...p.storyboardImages] : (p.storyboardImages ? [p.storyboardImages] : []);
+      renderStoryboardGallery('edit');
 
       document.getElementById('editModalOverlay').classList.add('active');
     }
@@ -588,6 +767,7 @@
         category: document.getElementById('editCategory').value,
         type: document.getElementById('editType').value,
         thumbnail: document.getElementById('editThumbnail').value,
+        storyboardImages: editStoryboardImages,
         masterPrompt: document.getElementById('editMasterPrompt').value
       };
 

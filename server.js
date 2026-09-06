@@ -51,19 +51,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configure Multer for thumbnail uploads
+// Configure Multer for uploads (thumbnails & storyboard references)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, 'public', 'uploads');
+    const uploadDir = process.env.VERCEL ? path.join('/tmp', 'uploads') : path.join(__dirname, 'public', 'uploads');
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+      try {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      } catch (err) {}
     }
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname) || '.jpg';
-    cb(null, 'thumb-' + uniqueSuffix + ext);
+    cb(null, 'img-' + uniqueSuffix + ext);
   }
 });
 const upload = multer({ storage: storage });
@@ -870,28 +872,46 @@ app.post('/api/admin/login', (req, res) => {
   return res.status(401).json({ success: false, message: 'Invalid username or password' });
 });
 
-// 5. Admin Upload Thumbnail
-app.post('/api/admin/upload', upload.single('thumbnail'), async (req, res) => {
-  if (!req.file) {
+// 5. Admin Upload Images (Thumbnail or Storyboard References)
+app.post('/api/admin/upload', upload.any(), async (req, res) => {
+  const files = req.files || (req.file ? [req.file] : []);
+  if (!files || files.length === 0) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
-  let fileUrl = '/uploads/' + req.file.filename;
-  try {
-    const fileBuf = fs.readFileSync(req.file.path);
-    const ghUrl = await uploadToGitHub(fileBuf, req.file.originalname || req.file.filename, req.file.mimetype);
-    if (ghUrl) {
-      fileUrl = ghUrl;
+
+  const urls = [];
+  for (const f of files) {
+    let fileUrl = '/uploads/' + f.filename;
+    try {
+      const fileBuf = fs.readFileSync(f.path);
+      const ghUrl = await uploadToGitHub(fileBuf, f.originalname || f.filename, f.mimetype);
+      if (ghUrl) {
+        fileUrl = ghUrl;
+      }
+    } catch (err) {
+      console.error('[GitHub Upload Error]:', err.message);
     }
-  } catch (err) {
-    console.error('[GitHub Upload Error]:', err.message);
+    urls.push(fileUrl);
   }
-  res.json({ success: true, url: fileUrl });
+
+  res.json({ success: true, url: urls[0], urls });
 });
 
 // 6. Admin Add New Prompt
 app.post('/api/admin/prompts', (req, res) => {
   const db = readDatabase();
-  const { title, category, type, promptCountBadge, thumbnail, summary, masterPrompt, negativePrompt, tools } = req.body;
+  const {
+    title,
+    category,
+    type,
+    promptCountBadge,
+    thumbnail,
+    storyboardImages,
+    summary,
+    masterPrompt,
+    negativePrompt,
+    tools
+  } = req.body;
 
   if (!title || !category || !masterPrompt) {
     return res.status(400).json({ success: false, message: 'Title, category, and master prompt are required' });
@@ -901,6 +921,13 @@ app.post('/api/admin/prompts', (req, res) => {
   const maxId = (db.prompts || []).reduce((max, p) => Math.max(max, p.numericId || 0), 284);
   const nextId = maxId + 1;
 
+  let cleanStoryboard = [];
+  if (Array.isArray(storyboardImages)) {
+    cleanStoryboard = storyboardImages.map(s => String(s || '').trim()).filter(Boolean);
+  } else if (typeof storyboardImages === 'string' && storyboardImages.trim()) {
+    cleanStoryboard = [storyboardImages.trim()];
+  }
+
   const newPrompt = {
     id: String(nextId),
     numericId: nextId,
@@ -909,6 +936,7 @@ app.post('/api/admin/prompts', (req, res) => {
     type: type === 'free' ? 'free' : 'premium',
     promptCountBadge: promptCountBadge || (type === 'free' ? '🗂 1 prompt' : `🗂 ${category}`),
     thumbnail: thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
+    storyboardImages: cleanStoryboard,
     summary: summary ? summary.trim() : 'Viral AI video engine system ready to copy and paste.',
     masterPrompt: masterPrompt.trim(),
     negativePrompt: negativePrompt ? negativePrompt.trim() : 'cartoon, low quality, jitter, blurred objects',
@@ -941,7 +969,29 @@ app.put('/api/admin/prompts/:id', (req, res) => {
   }
 
   const existing = db.prompts[index];
-  const { title, category, type, promptCountBadge, thumbnail, summary, masterPrompt, negativePrompt, tools } = req.body;
+  const {
+    title,
+    category,
+    type,
+    promptCountBadge,
+    thumbnail,
+    storyboardImages,
+    summary,
+    masterPrompt,
+    negativePrompt,
+    tools
+  } = req.body;
+
+  let updatedStoryboard = existing.storyboardImages || [];
+  if (storyboardImages !== undefined) {
+    if (Array.isArray(storyboardImages)) {
+      updatedStoryboard = storyboardImages.map(s => String(s || '').trim()).filter(Boolean);
+    } else if (typeof storyboardImages === 'string' && storyboardImages.trim()) {
+      updatedStoryboard = [storyboardImages.trim()];
+    } else {
+      updatedStoryboard = [];
+    }
+  }
 
   db.prompts[index] = {
     ...existing,
@@ -950,6 +1000,7 @@ app.put('/api/admin/prompts/:id', (req, res) => {
     type: type !== undefined ? type : existing.type,
     promptCountBadge: promptCountBadge !== undefined ? promptCountBadge : existing.promptCountBadge,
     thumbnail: thumbnail !== undefined ? thumbnail : existing.thumbnail,
+    storyboardImages: updatedStoryboard,
     summary: summary !== undefined ? summary.trim() : existing.summary,
     masterPrompt: masterPrompt !== undefined ? masterPrompt.trim() : existing.masterPrompt,
     negativePrompt: negativePrompt !== undefined ? negativePrompt.trim() : existing.negativePrompt,
