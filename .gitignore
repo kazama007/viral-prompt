@@ -1,0 +1,7 @@
+node_modules/
+scratch/
+scratch_*
+test_*.png
+*.log
+.DS_Store
+archive_old_root/

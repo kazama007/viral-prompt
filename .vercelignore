@@ -1,0 +1,6 @@
+scratch/
+archive_old_root/
+*.log
+.gemini/
+.env.local
+.DS_Store

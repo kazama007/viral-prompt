@@ -1,0 +1,318 @@
+{
+  "admin": {
+    "username": "admin",
+    "password": "admin123"
+  },
+  "users": [
+    {
+      "id": "usr_sachin",
+      "name": "Sachin",
+      "email": "sachin@gmail.com",
+      "password": "password123",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "subscription": {
+        "status": "active",
+        "plan": "1_month_vip",
+        "grantedAt": "2026-09-01T00:00:00.000Z",
+        "expiresAt": "2026-10-06T00:00:00.000Z",
+        "durationDays": 30
+      }
+    },
+    {
+      "id": "usr_1788641305946",
+      "name": "Rahul Free",
+      "email": "rahul@gmail.com",
+      "password": "password123",
+      "createdAt": "2026-09-05T20:48:25.946Z",
+      "subscription": {
+        "status": "inactive",
+        "plan": "free",
+        "grantedAt": null,
+        "expiresAt": null,
+        "durationDays": 0
+      }
+    },
+    {
+      "id": "usr_1788641733699",
+      "name": "Sachin Kumar",
+      "email": "sa81asas2sn@gmail.com",
+      "password": "2fac@admin123",
+      "createdAt": "2026-09-05T20:55:33.699Z",
+      "subscription": {
+        "status": "inactive",
+        "plan": "free",
+        "grantedAt": null,
+        "expiresAt": null,
+        "durationDays": 0
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Animal & Pets",
+      "count": 38
+    },
+    {
+      "id": 2,
+      "name": "Art & Animation",
+      "count": 25
+    },
+    {
+      "id": 3,
+      "name": "ASMR & Satisfying",
+      "count": 24
+    },
+    {
+      "id": 4,
+      "name": "Comedy & Entertainment",
+      "count": 19
+    },
+    {
+      "id": 5,
+      "name": "DIY & Crafts",
+      "count": 18
+    },
+    {
+      "id": 6,
+      "name": "Emotional & Inspirational",
+      "count": 15
+    },
+    {
+      "id": 7,
+      "name": "Fantasy & Sci-Fi",
+      "count": 26
+    },
+    {
+      "id": 8,
+      "name": "Food & Cooking",
+      "count": 11
+    },
+    {
+      "id": 9,
+      "name": "Historical & Nostalgia",
+      "count": 14
+    },
+    {
+      "id": 10,
+      "name": "Kids & Family",
+      "count": 16
+    },
+    {
+      "id": 11,
+      "name": "Nature & Wildlife",
+      "count": 20
+    },
+    {
+      "id": 12,
+      "name": "Sports & Action",
+      "count": 23
+    }
+  ],
+  "prompts": [
+    {
+      "id": "285",
+      "numericId": 285,
+      "title": "30 Sec OSMIC SCALE JOURNEY / SURREAL SPACE TRANSITION VIDEO ENGINE",
+      "category": "General",
+      "type": "premium",
+      "promptCountBadge": "🗂 General",
+      "thumbnail": "assets/images/marquee/card_cosmic.png",
+      "summary": "Hypnotic viral space journey zooming from Saturn rings into swirling galactic core with photorealistic gravitational lensing.",
+      "masterPrompt": "SYSTEM PROMPT: Photorealistic Deep Space Planetary Odyssey\nSTYLE: NASA Webb telescope realism meets IMAX interstellar cinematography, 8K volume rendering, true physical orbital mechanics.\nSCENE BREAKDOWN:\n00-10s: Extreme macro tracking along the razor-thin icy boulder rings of Saturn. Millions of glistening crystal ice rocks casting hard shadows in bright sunlight.\n10-20s: Warp speed acceleration through a glowing violet and gold nebula dust cloud. Star clusters reflect prism light across the camera lens.\n20-30s: Camera emerges facing a supermassive glowing spiral galaxy with accretion disk in ultra-slow hypnotic rotation.\nCAMERA: Smooth cinematic 6-axis orbital glide, focal length shift from 24mm wide to 200mm telephoto.\nLIGHTING: High dynamic range single directional solar illumination against deep obsidian void.",
+      "negativePrompt": "cartoon, 2d, blurry, pixelated, bad textures, cheesy sci-fi effects.",
+      "tools": [
+        "Kling AI",
+        "Runway Gen-3",
+        "Veo 2"
+      ],
+      "views": 27400,
+      "likes": 2180,
+      "updatedDate": "05 Sep 2026"
+    },
+    {
+      "id": "284",
+      "numericId": 284,
+      "title": "30 Sec ULTRA VIRAL INFRASTRUCTURE DISASTER & RECONSTRUCTION VIDEO ENGINE",
+      "category": "DIY & Crafts",
+      "type": "premium",
+      "promptCountBadge": "🗂 DIY & Crafts",
+      "thumbnail": "assets/images/marquee/card_disaster.png",
+      "summary": "High-octane viral hyper-realistic destruction of modern bridges and dams followed by futuristic autonomous nanotech laser reconstruction.",
+      "masterPrompt": "SYSTEM PROMPT: Hyper-Realistic Civil Engineering Disaster & Autonomous Nanotech Reconstruction\nSTYLE: Ultra-photorealistic 8K, cinematic disaster movie realism, anamorphic lens flare, IMAX aspect, volumetric dust particles, photoreal physics simulation.\nSCENE 1 (0-10s): High-angle cinematic crane shot of a massive futuristic suspension bridge suddenly trembling. Tension cables snap like acoustic guitar strings in hyper slow motion. Concrete pillars fracture with ultra-detailed pulverization, dust plumes billow over turbulent water below.\nSCENE 2 (10-20s): Drone zoom-in showing autonomous glowing orange-amber robotic construction swarms and laser scaffolding activating instantaneously. Nanite lasers weld broken iron girders back into shape with intense electric spark showers.\nSCENE 3 (20-30s): Timelapse hyper-build as futuristic carbon-fiber composite material spreads like living organism, restoring the bridge to a futuristic luminous glowing landmark. Sunset golden hour lighting reflections on cured crystalline asphalt.\nCAMERA: Dynamic FPV drone orbit, speed ramp from 120fps slow-motion fracture to 4x timelapse reconstruction.\nLIGHTING: Dramatic overcast twilight transitioning into radiant golden sunset with neon orange nanotech laser emission.\nNEGATIVE RULES: cartoon, blurry, low resolution, plastic skin, distorted hands, flickering, jittery frame transitions.",
+      "negativePrompt": "cartoon, low poly, 3d render plastic, low resolution, washed out, blurry, jerky camera motion, distorted structures.",
+      "tools": [
+        "Kling AI",
+        "Runway Gen-3",
+        "Luma Dream",
+        "Veo 2"
+      ],
+      "views": 14200,
+      "likes": 842,
+      "updatedDate": "04 Sep 2026"
+    },
+    {
+      "id": "283",
+      "numericId": 283,
+      "title": "30 Sec VIRAL GHOST BABY & CHILD HORROR VIDEO ENGINE",
+      "category": "Kids & Family",
+      "type": "premium",
+      "promptCountBadge": "🗂 Kids & Family",
+      "thumbnail": "assets/images/marquee/card_ghost.png",
+      "summary": "Atmospheric 1990s analog camcorder horror aesthetic with terrifying emotional twist, subtle shadow movement, and viral curiosity loop.",
+      "masterPrompt": "SYSTEM PROMPT: Analog Camcorder Supernatural Folklore Discovery\nSTYLE: Found footage 1996 VHS aesthetic, CRT scanlines, subtle tracking distortion, warm dim tungsten lamp illumination, uncanny valley atmospheric suspense.\nSCENE BREAKDOWN:\n00-08s: Handheld camcorder perspective walking into an old wooden village nursery room. An antique wooden rocking cradle gently sways back and forth on its own in eerie rhythm.\n08-18s: Soft baby giggle audio echoes from the ceiling corner. Camera pans up in terrified trembling motion: translucent luminescent baby silhouette crawling along ceiling moldings leaving tiny glowing footprints.\n18-30s: The figure turns its head with glowing playful eyes, giggles, waves gently, and dissolves into luminous fireflies that float downward around the camera lens.\nCAMERA: Slightly unsteady handheld camcorder, natural autofocus hunting, zoom-in on cradle.\nLIGHTING: Moonlight streaming through stained window slit + dim 25W bedside amber lamp.",
+      "negativePrompt": "gore, blood, disfigured, 3d cartoon, bright sunny lighting, clean 4k digital noise-free look.",
+      "tools": [
+        "Seedance",
+        "Kling AI",
+        "Hailuo",
+        "Runway Gen-3"
+      ],
+      "views": 18900,
+      "likes": 1240,
+      "updatedDate": "03 Sep 2026"
+    },
+    {
+      "id": "282",
+      "numericId": 282,
+      "title": "30 Sec VIRAL EMOTIONAL PRISON VISITATION REUNION ENGINE",
+      "category": "Emotional & Inspirational",
+      "type": "premium",
+      "promptCountBadge": "🗂 Emotional & Inspirational",
+      "thumbnail": "assets/images/marquee/card_prison.png",
+      "summary": "Heart-wrenching viral narrative prompt featuring emotional prison glass visitation, tears of joy, and candlelight burger celebration.",
+      "masterPrompt": "SYSTEM PROMPT: Cinematic Hyper-Emotional Drama & Character Continuity\nSTYLE: Hollywood 35mm anamorphic film lens, Kodak Vision3 500T aesthetic, shallow depth of field, warm candlelight glow against cold institutional prison concrete.\nSCENE BREAKDOWN:\n00-10s: Slow push-in tracking shot on a tearful mother in orange jumpsuit walking through fluorescent-lit corridor, placing trembling hand on security glass.\n10-20s: Reverse shot through the reflective glass partition. Father smiling through tears holding their newborn baby girl up to the window, baby laughing playfully.\n20-30s: Father revealing a mini burger with a single glowing birthday candle through the metal tray slot, teardrop reflecting candle flame in extreme macro close-up.\nLIGHTING: High-contrast cinematic split lighting, melancholy blue background vs warm amber birthday candle highlight.\nNEGATIVE: cartoon, smiling guard, distorted fingers, low detail, plastic textures.",
+      "negativePrompt": "cartoon, smiling guard, distorted fingers, low detail, plastic textures, bad face.",
+      "tools": [
+        "Seedance",
+        "Kling AI",
+        "Runway Gen-3"
+      ],
+      "views": 134000,
+      "likes": 9850,
+      "updatedDate": "05 Sep 2026"
+    },
+    {
+      "id": "281",
+      "numericId": 281,
+      "title": "30SEC BABY-GOAT FEEDING SATISFACTION VIDEOS",
+      "category": "Animal & Pets",
+      "type": "premium",
+      "promptCountBadge": "🗂 Animal & Pets",
+      "thumbnail": "assets/images/marquee/card_5.png",
+      "summary": "Ultra-cute high dopamine farm satisfaction reel featuring miniature baby pygmy goats wearing knit sweaters drinking warm milk.",
+      "masterPrompt": "SYSTEM PROMPT: Ultra-Cute Satisfying Baby Pygmy Goat ASMR\nSTYLE: Cozy pastoral farm aesthetic, warm morning sunlight, pastel color palette, soft fluffy fur texture, ultra-high frame rate slow motion.\nSCENE:\n00-10s: Three baby pygmy goats in tiny colorful hand-knitted woolen sweaters excitedly hopping on wooden barn hay bales.\n10-20s: Hands offer three miniature milk bottles; goats latch on greedily, tail wagging in hyper-fast cute synchronized motion.\n20-30s: Satisfied baby goat collapses softly onto a pile of clean lavender and straw, licking its milky nose and falling asleep with gentle milk mustache.\nCAMERA: Low ground angle level with goats, crisp macro fur detail, creamy background bokeh.",
+      "negativePrompt": "scary, skinny animals, bad anatomy, deformed ears, dirty environment.",
+      "tools": [
+        "Seedance",
+        "Kling AI",
+        "Luma Dream"
+      ],
+      "views": 16700,
+      "likes": 1340,
+      "updatedDate": "01 Sep 2026"
+    },
+    {
+      "id": "280",
+      "numericId": 280,
+      "title": "30 Sec VIRAL CELESTIAL CLOUD ANGEL & SUPERNATURAL STORM ENGINE",
+      "category": "Fantasy & Sci-Fi",
+      "type": "premium",
+      "promptCountBadge": "🗂 Fantasy & Sci-Fi",
+      "thumbnail": "assets/images/marquee/card_6.png",
+      "summary": "Mesmerizing airplane window POV witnessing a giant ethereal angel manifest within towering golden sunlit storm clouds.",
+      "masterPrompt": "SYSTEM PROMPT: Photorealistic Passenger Window Airplane POV Supernatural Cloud Event\nSTYLE: Ultra-realistic iPhone 16 Pro camera sensor aesthetic, authentic cabin window double-pane reflection, dirty glass smudges, natural motion vibration.\nSCENE:\n00-10s: Passenger view looking through airplane window over endless sea of thick white cumulonimbus clouds at golden hour.\n10-20s: Sunlight pierces through cloud canyons as vapor coalesces into an immense 2000-foot luminous angelic silhouette with glowing plumage wings unfolding across the sky.\n20-30s: Distant lightning flashes illuminate the angel silhouette with electric violet caustics before it gently dissolves into golden sunset vapor.\nCAMERA: Handheld passenger POV, realistic camera re-focusing, wing visible in corner.",
+      "negativePrompt": "cartoon, 3d CGI videogame look, blurry, oversaturated fake clouds.",
+      "tools": [
+        "Kling AI",
+        "Runway Gen-3",
+        "Hailuo"
+      ],
+      "views": 68000,
+      "likes": 5120,
+      "updatedDate": "05 Sep 2026"
+    },
+    {
+      "id": "270",
+      "numericId": 270,
+      "title": "30-SECOND GIANT BEEHIVE",
+      "category": "Nature & Wildlife",
+      "type": "free",
+      "promptCountBadge": "🗂 1 prompt",
+      "thumbnail": "assets/images/banner_beehive.jpg",
+      "summary": "Mesmerizing microscopic drone journey inside a glowing hexagonal cathedral beehive with liquid golden honey dripping in photorealistic macro physics.",
+      "masterPrompt": "MASTER PROMPT: Microscopic Drone Tour Inside a Giant Golden Hexagonal Beehive\nSTYLE: Ultra-macro National Geographic IMAX cinematic 8K, honey droplet refraction, glistening beeswax hexagonal architecture, golden hour backlight.\nSHOT 1 (0-10s): Extreme macro push-in through the entrance of an ancient hollow oak tree into a monumental golden beehive chamber. Millions of photorealistic worker bees tending glowing crystalline honey cells.\nSHOT 2 (10-20s): FPV flight following a queen bee with iridescent velvet wings. Drops of thick amber honey suspend in mid-air in slow-motion, capturing prism caustic lighting.\nSHOT 3 (20-30s): 360-degree upward spiral through a hexagonal honey cathedral, reaching the honeycomb ceiling where golden pollen dust sparkles like diamond stars.\nCAMERA: Probe lens micro-FPV flight, smooth motorized gimbal glide, shallow depth of field (f/2.8 macro).\nCOLOR GRADE: Rich liquid gold, warm honey amber, deep woody obsidian shadows, high saturation highlights.",
+      "negativePrompt": "flat colors, low detail, insects with extra limbs, plastic textures, blurry honey, jerky camera.",
+      "tools": [
+        "Kling AI",
+        "Runway Gen-3",
+        "Midjourney v6.1",
+        "Veo 2"
+      ],
+      "views": 34100,
+      "likes": 2980,
+      "updatedDate": "29 Aug 2026"
+    },
+    {
+      "id": "264",
+      "numericId": 264,
+      "title": "Unlimited Nano Banana Bulk Image Generation Tool | Free Download + No Watermark",
+      "category": "Art & Animation",
+      "type": "free",
+      "promptCountBadge": "🗂 1 prompt",
+      "thumbnail": "https://images.unsplash.com/photo-1528825871115-3581a5387919?w=800&auto=format&fit=crop&q=80",
+      "summary": "Complete system prompt + Google Sheets automation script template for bulk rendering 100+ viral surreal fruit micro-animations with zero watermarks.",
+      "masterPrompt": "SYSTEM PROMPT: Surreal Micro-World Banana Universe Series\nSTYLE: Pop-art hyperrealism meets Wes Anderson color symmetry, crisp studio lighting, 8k octane render texture, velvety peel reflections.\nCORE ENGINE:\nGenerate hyper-detailed character scenes where realistic bananas live miniature human lives inside ordinary household scenes.\nSCENE MATRIX:\n- Banana barista preparing espresso inside a porcelain cup\n- Banana astronaut planting peel flag on a moon made of cheese\n- Banana cyberpunk motorcycle racer speeding on a tabletop kitchen counter with neon light trails.\nCAMERA: Miniature tilt-shift macro lens, vibrant pastels, ultra-sharp focus on textured peel pores.",
+      "negativePrompt": "ugly, watermark, blurry, deformed fruit, washed out lighting.",
+      "tools": [
+        "ChatGPT-4o",
+        "Midjourney",
+        "ComfyUI",
+        "Seedance"
+      ],
+      "views": 29500,
+      "likes": 2410,
+      "updatedDate": "26 Aug 2026"
+    },
+    {
+      "id": "255",
+      "numericId": 255,
+      "title": "FREE AI AUTO EDITOR FOR EVERYONE — GOOGLE DRIVE DOWNLOAD LINK BELOW 🚀",
+      "category": "Art & Animation",
+      "type": "free",
+      "promptCountBadge": "🗂 1 prompt",
+      "thumbnail": "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&auto=format&fit=crop&q=80",
+      "summary": "Free script + mega prompt that formats any long YouTube video or podcast into 10 viral 30-sec Shorts scripts with hook score & scene-by-scene visual cues.",
+      "masterPrompt": "ROLE: Senior Viral TikTok / YouTube Shorts Video Editor & Hook Engineer\nOBJECTIVE: Turn any topic or text into a retention-optimized 30-second video screenplay with 85%+ retention rate formula.\nFRAMEWORK:\n1. 0-3 SEC (HOOK): Visual pattern interrupt + controversial question or unbelievable fact.\n2. 3-15 SEC (STORY LOOP): Fast narrative progression, 1 scene switch every 2.5 seconds.\n3. 15-25 SEC (VALUE CLIMAX): The surprising twist or payoff.\n4. 25-30 SEC (VIRAL CALL-TO-ACTION): Curiosity loop ending that loops seamlessly back to second 0.\nOUTPUT FORMAT: Table with Columns [Timestamp, Visual Scene AI Prompt, On-Screen Captions, Voiceover Audio, Sound FX].",
+      "negativePrompt": "boring intro, generic summary, text walls, no visuals.",
+      "tools": [
+        "ChatGPT-4o",
+        "CapCut Script",
+        "Python"
+      ],
+      "views": 31200,
+      "likes": 2780,
+      "updatedDate": "20 Aug 2026"
+    },
+    {
+      "id": "246",
+      "numericId": 246,
+      "title": "PAWS & CHAOS UNIVERSE ANIMAL COMEDY UNIVERSE",
+      "category": "Animal & Pets",
+      "type": "free",
+      "promptCountBadge": "🗂 1 prompt",
+      "thumbnail": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&auto=format&fit=crop&q=80",
+      "summary": "Hilarious episodic universe of two mischievous cat detectives attempting to crack open an automatic robotic feeder with comical spy gadgets.",
+      "masterPrompt": "MASTER PROMPT: Mission Impossible: Cat Heist Detective Comedy\nSTYLE: Pixar meets Wes Anderson cinematic realism, ultra-detailed fur dynamics, expressive cat eyes and whisker twitching, dramatic thriller lighting with comedic irony.\nSCENE:\nTwo cats wearing miniature black sunglasses crawling belly-flat across polished wooden floor avoiding laser sensors.\nCat Agent 1 taps paw on robotic feeder keyboard; feeder dispenses single kibble into velvet pouch.\nFeeder alarm goes off; both cats scramble in comedy cartoon burnout skid before darting into laundry basket.\nCAMERA: Mission Impossible low-angle dolly tracking, cinematic letterbox aspect ratio.",
+      "negativePrompt": "distorted cat paws, unnatural movements, cartoon 2d drawings.",
+      "tools": [
+        "Kling AI",
+        "Seedance",
+        "Midjourney"
+      ],
+      "views": 28400,
+      "likes": 2150,
+      "updatedDate": "16 Aug 2026"
+    }
+  ]
+}
