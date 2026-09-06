@@ -1,8 +1,18 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const { uploadToGitHub } = require('./lib/githubStorage');
+const {
+  registerCloudUser,
+  loginCloudUser,
+  getCloudUserProfile,
+  listCloudUsers,
+  updateCloudUserSubscription,
+  deleteCloudUser
+} = require('./lib/supabaseAuth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -212,85 +222,56 @@ function sanitizeUser(user) {
   };
 }
 
-// ─── Authentication API Routes ───
+// ─── Authentication API Routes (Supabase Cloud Auth) ───
 
-// Register New User
-app.post('/api/auth/register', (req, res) => {
-  const db = readDatabase();
-  db.users = db.users || [];
-
+// Register New User (Cloud Stored)
+app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
   }
 
-  const cleanEmail = email.trim().toLowerCase();
-  const existing = db.users.find(u => u.email.toLowerCase() === cleanEmail);
-  if (existing) {
-    return res.status(400).json({ success: false, message: 'An account with this email already exists' });
-  }
-
-  const newUser = {
-    id: 'usr_' + Date.now(),
-    name: name.trim(),
-    email: cleanEmail,
-    password: password.trim(),
-    createdAt: new Date().toISOString(),
-    subscription: {
-      status: 'inactive',
-      plan: 'free',
-      grantedAt: null,
-      expiresAt: null,
-      durationDays: 0
+  try {
+    const result = await registerCloudUser(name, email, password);
+    res.json({
+      success: true,
+      message: 'Account created successfully in cloud',
+      token: result.token,
+      user: result.user
+    });
+  } catch (err) {
+    console.error('[Cloud Register Error]:', err.message);
+    let msg = err.message || 'Registration failed';
+    if (msg.toLowerCase().includes('already registered')) {
+      msg = 'An account with this email already exists';
     }
-  };
-
-  db.users.push(newUser);
-  writeDatabase(db);
-
-  const token = generateUserToken(newUser.id);
-  res.json({
-    success: true,
-    message: 'Account created successfully',
-    token,
-    user: sanitizeUser(newUser)
-  });
+    res.status(400).json({ success: false, message: msg });
+  }
 });
 
-// Login User
-app.post('/api/auth/login', (req, res) => {
-  const db = readDatabase();
-  db.users = db.users || [];
-
+// Login User (Cloud Stored)
+app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
 
-  const cleanEmail = email.trim().toLowerCase();
-  const user = db.users.find(u => u.email.toLowerCase() === cleanEmail && u.password === password.trim());
-  if (!user) {
-    return res.status(401).json({ success: false, message: 'Invalid email or password' });
+  try {
+    const result = await loginCloudUser(email, password);
+    res.json({
+      success: true,
+      message: 'Logged in successfully',
+      token: result.token,
+      user: result.user
+    });
+  } catch (err) {
+    console.error('[Cloud Login Error]:', err.message);
+    res.status(401).json({ success: false, message: 'Invalid email or password' });
   }
-
-  // Update expiration status if needed and persist
-  const subInfo = evaluateSubscription(user);
-  writeDatabase(db);
-
-  const token = generateUserToken(user.id);
-  res.json({
-    success: true,
-    message: 'Logged in successfully',
-    token,
-    user: sanitizeUser(user)
-  });
 });
 
-// Current User Profile (Me)
-app.get('/api/auth/me', (req, res) => {
-  const db = readDatabase();
-  db.users = db.users || [];
-
+// Current User Profile (Me) (Cloud Validated)
+app.get('/api/auth/me', async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '').trim() || (req.query.token ? req.query.token.trim() : '');
   
@@ -298,26 +279,20 @@ app.get('/api/auth/me', (req, res) => {
     return res.status(401).json({ success: false, message: 'Unauthorized / token missing' });
   }
 
-  const userId = getUserIdFromToken(token);
-  let user = null;
-  if (userId) {
-    user = db.users.find(u => u.id === userId || u.email.toLowerCase() === userId.toLowerCase());
-  }
-  if (!user && token) {
-    user = db.users.find(u => u.id === token || u.email.toLowerCase() === token.toLowerCase());
-  }
+  try {
+    const user = await getCloudUserProfile(token);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found or session expired' });
+    }
 
-  if (!user) {
-    return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({
+      success: true,
+      user
+    });
+  } catch (err) {
+    console.error('[Cloud Me Error]:', err.message);
+    res.status(401).json({ success: false, message: 'Invalid token' });
   }
-
-  evaluateSubscription(user);
-  writeDatabase(db);
-
-  res.json({
-    success: true,
-    user: sanitizeUser(user)
-  });
 });
 
 // ─── API Routes ───
@@ -509,7 +484,7 @@ app.get('/api/community/posts', (req, res) => {
 });
 
 // 2. Create Community Post (Authenticated Users)
-app.post('/api/community/posts', upload.single('media'), (req, res) => {
+app.post('/api/community/posts', upload.single('media'), async (req, res) => {
   const db = readDatabase();
   db.users = db.users || [];
   if (!db.communityPosts || !db.communityPosts.length) {
@@ -523,13 +498,12 @@ app.post('/api/community/posts', upload.single('media'), (req, res) => {
     return res.status(401).json({ success: false, message: 'Please login to post in the community.' });
   }
 
-  const userId = getUserIdFromToken(token);
-  let user = null;
-  if (userId) {
-    user = db.users.find(u => u.id === userId || u.email.toLowerCase() === userId.toLowerCase());
-  }
-  if (!user && token) {
-    user = db.users.find(u => u.id === token || u.email.toLowerCase() === token.toLowerCase());
+  let user = await getCloudUserProfile(token);
+  if (!user) {
+    const userId = getUserIdFromToken(token);
+    if (userId) {
+      user = db.users.find(u => u.id === userId || u.email.toLowerCase() === userId.toLowerCase());
+    }
   }
 
   if (!user) {
@@ -549,6 +523,12 @@ app.post('/api/community/posts', upload.single('media'), (req, res) => {
   if (req.file) {
     mediaUrl = '/uploads/' + req.file.filename;
     mediaType = req.file.mimetype.startsWith('video') ? 'video' : 'image';
+    try {
+      const fileBuf = fs.readFileSync(req.file.path);
+      uploadToGitHub(fileBuf, req.file.originalname || req.file.filename, req.file.mimetype)
+        .then(ghUrl => { if (ghUrl) newPost.mediaUrl = ghUrl; })
+        .catch(e => console.error('[GitHub Post Media Error]:', e.message));
+    } catch (e) {}
   }
 
   const newPost = {
@@ -645,11 +625,20 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // 5. Admin Upload Thumbnail
-app.post('/api/admin/upload', upload.single('thumbnail'), (req, res) => {
+app.post('/api/admin/upload', upload.single('thumbnail'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
-  const fileUrl = '/uploads/' + req.file.filename;
+  let fileUrl = '/uploads/' + req.file.filename;
+  try {
+    const fileBuf = fs.readFileSync(req.file.path);
+    const ghUrl = await uploadToGitHub(fileBuf, req.file.originalname || req.file.filename, req.file.mimetype);
+    if (ghUrl) {
+      fileUrl = ghUrl;
+    }
+  } catch (err) {
+    console.error('[GitHub Upload Error]:', err.message);
+  }
   res.json({ success: true, url: fileUrl });
 });
 
@@ -770,132 +759,117 @@ app.delete('/api/admin/categories/:name', (req, res) => {
   res.json({ success: true, message: 'Category deleted' });
 });
 
-// 11. Admin Get All Users (with live subscription calculation, search & filter)
-app.get('/api/admin/users', (req, res) => {
-  const db = readDatabase();
-  db.users = db.users || [];
+// 11. Admin Get All Users (Live from Supabase Cloud)
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    let users = await listCloudUsers();
+    const { search, status } = req.query;
 
-  let stateModified = false;
-  // Automatically evaluate every user's subscription and sync auto-expiry to DB if changed
-  db.users.forEach(u => {
-    const prevStatus = u.subscription?.status;
-    const evaluated = evaluateSubscription(u);
-    if (prevStatus !== evaluated.status) {
-      stateModified = true;
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      users = users.filter(u =>
+        (u.name && u.name.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q))
+      );
     }
-  });
 
-  if (stateModified) {
-    writeDatabase(db);
-  }
+    if (status && status !== 'all') {
+      users = users.filter(u => u.subscription?.status === status);
+    }
 
-  const { search, status } = req.query;
-  let filtered = db.users;
+    const allUsers = await listCloudUsers();
+    const stats = {
+      totalUsers: allUsers.length,
+      activeVipUsers: allUsers.filter(u => u.subscription?.status === 'active').length,
+      expiredUsers: allUsers.filter(u => u.subscription?.status === 'expired').length,
+      inactiveUsers: allUsers.filter(u => u.subscription?.status === 'inactive').length
+    };
 
-  if (search && search.trim()) {
-    const q = search.trim().toLowerCase();
-    filtered = filtered.filter(u =>
-      (u.name && u.name.toLowerCase().includes(q)) ||
-      (u.email && u.email.toLowerCase().includes(q))
-    );
-  }
-
-  if (status && status !== 'all') {
-    filtered = filtered.filter(u => {
-      const evalInfo = evaluateSubscription(u);
-      return evalInfo.status === status;
+    res.json({
+      success: true,
+      stats,
+      users
     });
+  } catch (err) {
+    console.error('[Cloud admin/users error]:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch users from cloud' });
   }
-
-  const sanitizedList = filtered.map(u => sanitizeUser(u));
-
-  // Compute overall stats from all users in DB
-  const allEvaluated = db.users.map(u => evaluateSubscription(u));
-  const stats = {
-    totalUsers: db.users.length,
-    activeVipUsers: allEvaluated.filter(e => e.status === 'active').length,
-    expiredUsers: allEvaluated.filter(e => e.status === 'expired').length,
-    inactiveUsers: allEvaluated.filter(e => e.status === 'inactive').length
-  };
-
-  res.json({
-    success: true,
-    stats,
-    users: sanitizedList
-  });
 });
 
-// 12. Admin Update User Subscription (Grant 1 Month, Extend 30 Days, Revoke)
-app.post('/api/admin/users/:id/subscription', (req, res) => {
-  const db = readDatabase();
-  db.users = db.users || [];
-
-  const user = db.users.find(u => u.id === req.params.id);
-  if (!user) {
-    return res.status(404).json({ success: false, message: 'User not found' });
-  }
-
+// 12. Admin Update User Subscription (Live in Supabase Cloud)
+app.post('/api/admin/users/:id/subscription', async (req, res) => {
   const { action = 'grant_1_month', durationDays = 30 } = req.body;
   const now = Date.now();
   const daysMs = (parseInt(durationDays) || 30) * 24 * 60 * 60 * 1000;
 
-  if (action === 'grant_1_month' || action === 'grant') {
-    // Fresh 1 Month (30 Days) subscription from now
-    user.subscription = {
-      status: 'active',
-      plan: '1_month_vip',
-      grantedAt: new Date(now).toISOString(),
-      expiresAt: new Date(now + daysMs).toISOString(),
-      durationDays: 30
-    };
-  } else if (action === 'extend_30' || action === 'extend') {
-    // Extend by 30 days
-    const currentExpiresTime = user.subscription?.expiresAt ? new Date(user.subscription.expiresAt).getTime() : 0;
-    const baseTime = (currentExpiresTime > now) ? currentExpiresTime : now;
-    const grantedAt = user.subscription?.grantedAt || new Date(now).toISOString();
+  try {
+    const allUsers = await listCloudUsers();
+    const targetUser = allUsers.find(u => u.id === req.params.id);
 
-    user.subscription = {
-      status: 'active',
-      plan: '1_month_vip',
-      grantedAt,
-      expiresAt: new Date(baseTime + daysMs).toISOString(),
-      durationDays: (user.subscription?.durationDays || 0) + 30
-    };
-  } else if (action === 'revoke') {
-    user.subscription = {
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: 'User not found in cloud' });
+    }
+
+    let newSubscription = {
       status: 'inactive',
       plan: 'free',
       grantedAt: null,
       expiresAt: null,
       durationDays: 0
     };
+
+    if (action === 'grant_1_month' || action === 'grant') {
+      newSubscription = {
+        status: 'active',
+        plan: '1_month_vip',
+        grantedAt: new Date(now).toISOString(),
+        expiresAt: new Date(now + daysMs).toISOString(),
+        durationDays: 30
+      };
+    } else if (action === 'extend_30' || action === 'extend') {
+      const currentExpiresTime = targetUser?.subscription?.expiresAt ? new Date(targetUser.subscription.expiresAt).getTime() : 0;
+      const baseTime = (currentExpiresTime > now) ? currentExpiresTime : now;
+      const grantedAt = targetUser?.subscription?.grantedAt || new Date(now).toISOString();
+      newSubscription = {
+        status: 'active',
+        plan: '1_month_vip',
+        grantedAt,
+        expiresAt: new Date(baseTime + daysMs).toISOString(),
+        durationDays: (targetUser?.subscription?.durationDays || 0) + 30
+      };
+    } else if (action === 'revoke') {
+      newSubscription = {
+        status: 'inactive',
+        plan: 'free',
+        grantedAt: null,
+        expiresAt: null,
+        durationDays: 0
+      };
+    }
+
+    const updated = await updateCloudUserSubscription(req.params.id, newSubscription);
+    res.json({
+      success: true,
+      message: action === 'revoke'
+        ? 'VIP subscription revoked'
+        : `1-Month VIP subscription active until ${new Date(newSubscription.expiresAt).toLocaleDateString('en-GB')}`,
+      user: updated
+    });
+  } catch (err) {
+    console.error('[Cloud update subscription error]:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to update subscription in cloud' });
   }
-
-  writeDatabase(db);
-
-  res.json({
-    success: true,
-    message: action === 'revoke'
-      ? 'VIP subscription revoked'
-      : `1-Month VIP subscription active until ${new Date(user.subscription.expiresAt).toLocaleDateString('en-GB')}`,
-    user: sanitizeUser(user)
-  });
 });
 
-// 13. Admin Delete User
-app.delete('/api/admin/users/:id', (req, res) => {
-  const db = readDatabase();
-  db.users = db.users || [];
-
-  const initialLength = db.users.length;
-  db.users = db.users.filter(u => u.id !== req.params.id);
-
-  if (db.users.length === initialLength) {
-    return res.status(404).json({ success: false, message: 'User not found' });
+// 13. Admin Delete User (Live from Supabase Cloud)
+app.delete('/api/admin/users/:id', async (req, res) => {
+  try {
+    await deleteCloudUser(req.params.id);
+    res.json({ success: true, message: 'User deleted from cloud successfully' });
+  } catch (err) {
+    console.error('[Cloud delete user error]:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to delete user from cloud' });
   }
-
-  writeDatabase(db);
-  res.json({ success: true, message: 'User deleted successfully' });
 });
 
 // 14. Catch-all: Route to public files or index.html

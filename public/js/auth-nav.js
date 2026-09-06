@@ -52,17 +52,19 @@
         const res = await fetch('/api/auth/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await res.json();
-        if (data && data.success && data.user) {
-          currentUser = data.user;
-          localStorage.setItem('promptmaster_user', JSON.stringify(currentUser));
-        } else {
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && data.user) {
+            currentUser = data.user;
+            localStorage.setItem('promptmaster_user', JSON.stringify(currentUser));
+          }
+        } else if (res.status === 401 || res.status === 403) {
           currentUser = null;
           localStorage.removeItem('promptmaster_token');
           localStorage.removeItem('promptmaster_user');
         }
       } catch (e) {
-        console.warn('Auth check error:', e);
+        console.warn('Auth check error (preserving local session):', e);
       }
     }
 
