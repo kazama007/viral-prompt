@@ -568,7 +568,8 @@ function renderPhpFile(filePath, context = {}) {
     if (phpBlock.includes('echo')) {
       if (phpBlock.includes('$SITE_NAME')) return 'VIRAL PROMPT';
       if (phpBlock.includes('$FACEBOOK_URL')) return 'https://www.facebook.com';
-      if (phpBlock.includes('$WHATSAPP_CHANNEL')) return 'https://whatsapp.com/channel/0029VbCl6nB002TFkWMBP43S';
+      if (phpBlock.includes('$WHATSAPP_CHANNEL')) return 'https://wa.me/919410610800';
+      if (phpBlock.includes('$WHATSAPP_NUMBER')) return '919410610800';
       if (phpBlock.includes('$CURRENT_YEAR')) return '2026';
       if (phpBlock.includes('$extraScripts')) return extraScripts;
     }
