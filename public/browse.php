@@ -61,8 +61,8 @@ include __DIR__ . '/includes/header.php';
         <h3 id="mLockHeading" style="font-size:18px;margin-bottom:8px;color:#92400E;font-weight:800;">VIP Community Prompt</h3>
         <p id="mLockText" style="font-size:14.5px;color:#78350F;margin-bottom:20px;max-width:480px;margin-left:auto;margin-right:auto;">This prompt includes the full master prompt system, camera movement rules, and audio hooks. Join the VIRAL PROMPT VIP community to unlock all 280+ prompts.</p>
         <div id="mLockBtnContainer" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-          <a href="pricing.php" class="btn btn-primary" style="background:#6d5dfc;border-radius:999px;padding:12px 28px;">Subscribe — $5/month</a>
-          <a href="https://wa.me/919131421048?text=Hello%20PROMPT%20MASTER%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green" style="border-radius:999px;padding:12px 28px;">Order on WhatsApp</a>
+          <a href="pricing.php" class="btn btn-primary" style="background:#6d5dfc;border-radius:999px;padding:12px 28px;">Subscribe — $2.5/month</a>
+          <a href="https://wa.me/919410610800?text=Hello%20VIRAL%20PROMPT%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green" style="border-radius:999px;padding:12px 28px;">Order on WhatsApp</a>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ include __DIR__ . '/includes/header.php';
   </div>
 
   <!-- WhatsApp Support Float -->
-  <a href="https://wa.me/919131421048?text=Hi!+I'm+a+member+of+your+community.+I+need+some+help."
+  <a href="https://wa.me/919410610800?text=Hi!+I'm+a+member+of+your+community.+I+need+some+help."
      target="_blank" rel="noopener" class="wa-float" title="WhatsApp Support">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.21 5.1 4.5.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.57-.09 1.76-.72 2.01-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35zM12.05 21.79h-.01a9.72 9.72 0 0 1-4.96-1.36l-.36-.21-3.69.97.98-3.6-.23-.37a9.72 9.72 0 0 1-1.49-5.18c0-5.37 4.37-9.74 9.75-9.74a9.68 9.68 0 0 1 6.89 2.86 9.68 9.68 0 0 1 2.85 6.89c0 5.38-4.37 9.74-9.73 9.74zm8.28-18.02A11.64 11.64 0 0 0 12.05.33C5.6.33.35 5.58.35 12.03c0 2.06.54 4.07 1.56 5.84L.25 23.79l6.07-1.59a11.68 11.68 0 0 0 5.72 1.46h.01c6.45 0 11.7-5.25 11.7-11.7 0-3.13-1.22-6.07-3.42-8.19z"/></svg>
     <span class="wa-float-label">Support</span>
@@ -452,8 +452,8 @@ include __DIR__ . '/includes/header.php';
             }
             if (lockBtns) {
               lockBtns.innerHTML = `
-                <a href="pricing.php" class="btn btn-primary" style="text-decoration:none;background:#6d5dfc;border-radius:999px;padding:12px 28px;">Subscribe — $5/month</a>
-                <a href="https://wa.me/919131421048?text=Hello%20PROMPT%20MASTER%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green" style="text-decoration:none;border-radius:999px;padding:12px 28px;">Order on WhatsApp</a>
+                <a href="pricing.php" class="btn btn-primary" style="text-decoration:none;background:#6d5dfc;border-radius:999px;padding:12px 28px;">Subscribe — $2.5/month</a>
+                <a href="https://wa.me/919410610800?text=Hello%20VIRAL%20PROMPT%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green" style="text-decoration:none;border-radius:999px;padding:12px 28px;">Order on WhatsApp</a>
               `;
             }
           }

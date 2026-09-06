@@ -58,7 +58,7 @@ include __DIR__ . '/includes/header.php';
           <h3 id="lockTitle">Premium Content</h3>
           <p id="lockDesc">This prompt is available for premium members only.</p>
           <div class="lock-buttons" id="lockButtons">
-            <a href="pricing.php" class="btn-subscribe-premium">Subscribe — $5/month</a>
+            <a href="pricing.php" class="btn-subscribe-premium">Subscribe — $2.5/month</a>
           </div>
         </div>
       </div>
@@ -206,12 +206,12 @@ include __DIR__ . '/includes/header.php';
             if (isUserLoggedIn) {
               // Registered user without subscription: show ONLY the Subscribe button
               lockButtons.innerHTML = `
-                <a href="pricing.php" class="btn-subscribe-premium">Subscribe — $5/month</a>
+                <a href="pricing.php" class="btn-subscribe-premium">Subscribe — $2.5/month</a>
               `;
             } else {
               // Guest user: show Subscribe button + Login link
               lockButtons.innerHTML = `
-                <a href="pricing.php" class="btn-subscribe-premium">Subscribe — $5/month</a>
+                <a href="pricing.php" class="btn-subscribe-premium">Subscribe — $2.5/month</a>
                 <a href="${loginNextUrl}" class="btn btn-outline" style="border-radius:999px;margin-top:6px;">Already a member? Login</a>
               `;
             }

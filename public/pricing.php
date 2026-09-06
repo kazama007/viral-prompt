@@ -16,7 +16,7 @@ include __DIR__ . '/includes/header.php';
         <span class="price-badge">Premium Access</span>
 
         <div style="margin-top:12px;">
-          <span class="price-num">$5</span><span class="price-per">/month</span>
+          <span class="price-num">$2.5</span><span class="price-per">/month</span>
         </div>
 
         <ul class="features">
@@ -30,9 +30,9 @@ include __DIR__ . '/includes/header.php';
         </ul>
 
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <a href="https://wa.me/919131421048?text=Hello%20PROMPT%20MASTER%2C%20I%20want%20to%20join%20the%20PROMPT%20MASTER%20VIP%20Community%20(%245%2Fmonth)"
+          <a href="https://wa.me/919410610800?text=Hello%20VIRAL%20PROMPT%2C%20I%20want%20to%20join%20the%20VIRAL%20PROMPT%20VIP%20Community%20(%242.5%2Fmonth)"
              target="_blank" rel="noopener" class="btn btn-green btn-lg btn-block" style="font-size:16px;padding:15px 24px;border-radius:999px;font-weight:700;">
-            💬 Deal &amp; Join via WhatsApp (+91 91314 21048)
+            💬 Deal &amp; Join via WhatsApp (+91 94106 10800)
           </a>
         </div>
       </div>
@@ -46,7 +46,7 @@ include __DIR__ . '/includes/header.php';
 
     <p style="text-align:center;color:var(--muted);font-size:14px;margin:20px auto 40px;max-width:500px;">
       💬 Any payment issue? Message us on WhatsApp:
-      <a href="https://wa.me/919131421048" target="_blank" style="color:var(--green);font-weight:700;text-decoration:none;">+91 91314 21048</a>
+      <a href="https://wa.me/919410610800" target="_blank" style="color:var(--green);font-weight:700;text-decoration:none;">+91 94106 10800</a>
     </p>
   </main>
 

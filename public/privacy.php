@@ -22,7 +22,7 @@ include __DIR__ . '/includes/header.php';
       <p style="margin-bottom:18px;">We apply strong technical safeguards to ensure that your private data is never sold, leased, or distributed to third parties.</p>
 
       <h3 style="margin:0 0 10px;">4. Contact Us</h3>
-      <p style="margin-bottom:0;">If you have any questions regarding this Privacy Policy, you may contact us at support@viralprompt.com or via WhatsApp at +91 91314 21048.</p>
+      <p style="margin-bottom:0;">If you have any questions regarding this Privacy Policy, you may contact us at support@viralprompt.com or via WhatsApp at +91 94106 10800.</p>
     </div>
   </main>
 

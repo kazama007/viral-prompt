@@ -134,8 +134,8 @@ include __DIR__ . '/includes/header.php';
         <h3 id="mLockHeading" style="font-size:18px;font-weight:800;margin-bottom:6px;">Premium Member Prompt</h3>
         <p id="mLockText" style="font-size:14px;color:#78350f;margin-bottom:18px;">This prompt includes the full master system prompt, camera movements, and audio hooks. Join our community to unlock all 280+ prompts.</p>
         <div id="mLockBtnContainer" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-          <a href="pricing.php" class="btn btn-primary btn-sm" style="background:#6d5dfc;border-radius:999px;padding:10px 24px;">Subscribe — $5/month</a>
-          <a href="https://wa.me/919131421048?text=Hello%20PROMPT%20MASTER%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green btn-sm" style="border-radius:999px;padding:10px 24px;">Order on WhatsApp</a>
+          <a href="pricing.php" class="btn btn-primary btn-sm" style="background:#6d5dfc;border-radius:999px;padding:10px 24px;">Subscribe — $2.5/month</a>
+          <a href="https://wa.me/919410610800?text=Hello%20VIRAL%20PROMPT%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green btn-sm" style="border-radius:999px;padding:10px 24px;">Order on WhatsApp</a>
         </div>
       </div>
 
@@ -405,8 +405,8 @@ include __DIR__ . '/includes/header.php';
             }
             if (lockBtns) {
               lockBtns.innerHTML = `
-                <a href="pricing.php" class="btn btn-primary btn-sm" style="background:#6d5dfc;border-radius:999px;padding:10px 24px;text-decoration:none;">Subscribe — $5/month</a>
-                <a href="https://wa.me/919131421048?text=Hello%20PROMPT%20MASTER%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green btn-sm" style="border-radius:999px;padding:10px 24px;text-decoration:none;">Order on WhatsApp</a>
+                <a href="pricing.php" class="btn btn-primary btn-sm" style="background:#6d5dfc;border-radius:999px;padding:10px 24px;text-decoration:none;">Subscribe — $2.5/month</a>
+                <a href="https://wa.me/919410610800?text=Hello%20VIRAL%20PROMPT%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green btn-sm" style="border-radius:999px;padding:10px 24px;text-decoration:none;">Order on WhatsApp</a>
               `;
             }
           }
