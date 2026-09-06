@@ -515,9 +515,13 @@ function renderPhpFile(filePath, context = {}) {
     return '';
   });
 
-  // Extract body content by removing the PHP header include and footer include
-  let bodyContent = rawContent.replace(/<\?php[\s\S]*?includes\/header\.php['"];?\s*\?>/i, '');
-  bodyContent = bodyContent.replace(/<\?php[\s\S]*?includes\/footer\.php['"];?\s*\?>/i, '');
+  // Replace inline template variables in raw content first
+  rawContent = rawContent.replace(/<\?php\s+echo\s+htmlspecialchars\(\$SITE_NAME\);?\s*\?>/g, 'VIRAL PROMPT');
+  rawContent = rawContent.replace(/<\?php\s+echo\s+\$CURRENT_YEAR;?\\s*\?>/g, '2026');
+
+  // Safely remove only the top header include and bottom footer include
+  let bodyContent = rawContent.replace(/^\s*<\?php[\s\S]*?includes\/header\.php['"];?\s*\?>/i, '');
+  bodyContent = bodyContent.replace(/<\?php\s*(?:include|require|include_once|require_once)[^?]*?includes\/footer\.php['"];?\s*\?>/i, '');
   // Strip any remaining PHP code in body
   bodyContent = bodyContent.replace(/<\?php[\s\S]*?\?>/g, '');
 
