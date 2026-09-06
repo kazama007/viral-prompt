@@ -91,7 +91,7 @@ function readDatabase() {
         }
         return JSON.parse(data);
       }
-      return { admin: { username: 'admin', password: 'admin123' }, categories: [], prompts: [] };
+      return { admin: { username: 'admin', password: 'Kazama#007' }, categories: [], prompts: [] };
     }
     const data = fs.readFileSync(activePath, 'utf8');
     return JSON.parse(data);
@@ -102,7 +102,7 @@ function readDatabase() {
         return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
       }
     } catch (e) {}
-    return { admin: { username: 'admin', password: 'admin123' }, categories: [], prompts: [] };
+    return { admin: { username: 'admin', password: 'Kazama#007' }, categories: [], prompts: [] };
   }
 }
 
@@ -795,9 +795,10 @@ app.get('/api/categories', (req, res) => {
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   const db = readDatabase();
-  const admin = db.admin || { username: 'admin', password: 'admin123' };
+  const validUsername = process.env.ADMIN_USERNAME || db.admin?.username || 'admin';
+  const validPassword = process.env.ADMIN_PASSWORD || db.admin?.password || 'Kazama#007';
 
-  if (username === admin.username && password === admin.password) {
+  if (username === validUsername && password === validPassword) {
     return res.json({
       success: true,
       message: 'Logged in successfully',
