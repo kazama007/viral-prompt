@@ -1,5 +1,5 @@
 /**
- * auth-nav.js — Navigation & Auth State Sync for NavPrompts
+ * auth-nav.js — Navigation & Auth State Sync for VIRAL PROMPT
  * Matches soniprompts.com navigation structure 1:1
  */
 
