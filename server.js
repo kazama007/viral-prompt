@@ -426,28 +426,33 @@ app.get('/api/prompts/:id', async (req, res) => {
   });
 });
 
-// ─── PHP Page Template Renderer ───
+// ─── Robust PHP Page Template Renderer ───
 function renderPhpFile(filePath, context = {}) {
   if (!fs.existsSync(filePath)) return null;
-  let content = fs.readFileSync(filePath, 'utf8');
+  let rawContent = fs.readFileSync(filePath, 'utf8');
 
-  // Recursively resolve includes / requires
-  content = content.replace(/<\?php[\s\S]*?(?:include|require|include_once|require_once)[\s\S]*?__DIR__\s*\.\s*['"]([^'"]+)['"];?[\s\S]*?\?>/g, (match, relPath) => {
-    const target = path.join(path.dirname(filePath), relPath);
-    if (fs.existsSync(target)) {
-      return renderPhpFile(target, context);
-    }
-    return '';
-  });
+  // Extract page variables
+  let pageTitle = context.pageTitle || 'VIRAL PROMPT — Viral AI Video Prompts';
+  let pageDesc = context.pageDesc || 'Viral AI video prompts for Reels, Shorts & TikTok.';
+  let activePage = 'home';
 
-  // Common replacements
-  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$SITE_NAME\);\s*\?>/g, 'VIRAL PROMPT');
-  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$pageTitle\);\s*\?>/g, context.pageTitle || 'VIRAL PROMPT — Viral AI Video Prompts');
-  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$pageDesc\);\s*\?>/g, context.pageDesc || 'Viral AI video prompts for Reels, Shorts & TikTok.');
-  content = content.replace(/<\?php\s+echo\s+\$CURRENT_YEAR;\s*\?>/g, '2026');
-  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$FACEBOOK_URL\);\s*\?>/g, 'https://www.facebook.com');
-  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$WHATSAPP_CHANNEL\);\s*\?>/g, 'https://whatsapp.com/channel/0029VbCl6nB002TFkWMBP43S');
-  content = content.replace(/<\?php\s+if\s+\(!empty\(\$extraHead\)\)\s+echo\s+\$extraHead;\s*\?>/g, `
+  const titleMatch = rawContent.match(/\$pageTitle\s*=\s*(?:\$SITE_NAME\s*\.\s*)?['"]([^'"]+)['"];/);
+  if (titleMatch) {
+    pageTitle = rawContent.includes('$SITE_NAME .') ? 'VIRAL PROMPT' + titleMatch[1] : titleMatch[1];
+  }
+
+  const descMatch = rawContent.match(/\$pageDesc\s*=\s*['"]([^'"]+)['"];/);
+  if (descMatch) pageDesc = descMatch[1];
+
+  const pageMatch = rawContent.match(/\$activePage\s*=\s*['"]([^'"]+)['"];/);
+  if (pageMatch) activePage = pageMatch[1];
+
+  let extraHead = '';
+  const extraHeadMatch = rawContent.match(/\$extraHead\s*=\s*'([\s\S]*?)';/);
+  if (extraHeadMatch) {
+    extraHead = extraHeadMatch[1];
+  } else {
+    extraHead = `
     <style>
       .btn-subscribe-premium {
         display: inline-flex;
@@ -472,11 +477,51 @@ function renderPhpFile(filePath, context = {}) {
         transform: translateY(-1px);
         box-shadow: 0 6px 18px rgba(109, 93, 252, 0.45);
       }
-    </style>
-  `);
-  content = content.replace(/<\?php\s+if\s+\(!empty\(\$extraScripts\)\)\s+echo\s+\$extraScripts;\s*\?>/g, '');
-  content = content.replace(/<\?php[\s\S]*?\?>/g, '');
-  return content;
+    </style>`;
+  }
+
+  let extraScripts = '';
+  const extraScriptsMatch = rawContent.match(/\$extraScripts\s*=\s*'([\s\S]*?)';/);
+  if (extraScriptsMatch) extraScripts = extraScriptsMatch[1];
+
+  // Load and render header and footer templates
+  const headerPath = path.join(__dirname, 'public', 'includes', 'header.php');
+  const footerPath = path.join(__dirname, 'public', 'includes', 'footer.php');
+  let headerContent = fs.existsSync(headerPath) ? fs.readFileSync(headerPath, 'utf8') : '';
+  let footerContent = fs.existsSync(footerPath) ? fs.readFileSync(footerPath, 'utf8') : '';
+
+  headerContent = headerContent.replace(/<\?php[\s\S]*?\?>/g, (phpBlock) => {
+    if (phpBlock.includes('echo')) {
+      if (phpBlock.includes('$pageTitle')) return pageTitle;
+      if (phpBlock.includes('$pageDesc')) return pageDesc;
+      if (phpBlock.includes('$SITE_NAME')) return 'VIRAL PROMPT';
+      if (phpBlock.includes("'home'")) return activePage === 'home' ? 'active' : '';
+      if (phpBlock.includes("'browse'")) return activePage === 'browse' ? 'active' : '';
+      if (phpBlock.includes("'community'")) return activePage === 'community' ? 'active' : '';
+      if (phpBlock.includes("'pricing'")) return activePage === 'pricing' ? 'active' : '';
+      if (phpBlock.includes('$extraHead')) return extraHead;
+    }
+    return '';
+  });
+
+  footerContent = footerContent.replace(/<\?php[\s\S]*?\?>/g, (phpBlock) => {
+    if (phpBlock.includes('echo')) {
+      if (phpBlock.includes('$SITE_NAME')) return 'VIRAL PROMPT';
+      if (phpBlock.includes('$FACEBOOK_URL')) return 'https://www.facebook.com';
+      if (phpBlock.includes('$WHATSAPP_CHANNEL')) return 'https://whatsapp.com/channel/0029VbCl6nB002TFkWMBP43S';
+      if (phpBlock.includes('$CURRENT_YEAR')) return '2026';
+      if (phpBlock.includes('$extraScripts')) return extraScripts;
+    }
+    return '';
+  });
+
+  // Extract body content by removing the PHP header include and footer include
+  let bodyContent = rawContent.replace(/<\?php[\s\S]*?includes\/header\.php['"];?\s*\?>/i, '');
+  bodyContent = bodyContent.replace(/<\?php[\s\S]*?includes\/footer\.php['"];?\s*\?>/i, '');
+  // Strip any remaining PHP code in body
+  bodyContent = bodyContent.replace(/<\?php[\s\S]*?\?>/g, '');
+
+  return headerContent.trim() + '\n' + bodyContent.trim() + '\n' + footerContent.trim();
 }
 
 function sendPhpOrHtml(req, res, baseName) {
