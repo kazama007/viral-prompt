@@ -7,11 +7,11 @@
   --primary: #7C5CFF;
   --primary-dark: #6847E8;
   --primary-light: #F1EDFF;
-  --bg: #F7F7FA;
+  --bg: #FFF4E6;
   --card: #FFFFFF;
   --text: #17151F;
   --muted: #6E6A7C;
-  --border: #E9E7F0;
+  --border: #EFE4D6;
   --green: #16A34A;
   --green-light: #DCFCE7;
   --red: #DC2626;
@@ -28,8 +28,8 @@ html { scroll-behavior: smooth; }
 
 body {
   background:
-    radial-gradient(ellipse 90% 500px at 50% -80px, rgba(124, 92, 255, 0.16), transparent),
-    linear-gradient(180deg, #ECE7FD 0%, #F4F2FB 420px, var(--bg) 850px);
+    radial-gradient(ellipse 90% 500px at 50% -80px, rgba(251, 146, 60, 0.22), transparent),
+    linear-gradient(180deg, #FFE7D1 0%, #FFF0E0 420px, var(--bg) 850px);
   background-color: var(--bg);
   color: var(--text);
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
