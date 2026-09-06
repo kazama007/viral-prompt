@@ -23,7 +23,30 @@ app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Static Folders
+// Redirect any .html requests to .php
+app.use((req, res, next) => {
+  if (req.path && req.path.endsWith('.html')) {
+    const target = req.path.replace(/\.html$/, '.php');
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, target + qs);
+  }
+  next();
+});
+
+// Intercept .php requests and render as HTML with includes
+app.get(/.*\.php$/, (req, res, next) => {
+  const base = path.basename(req.path, '.php');
+  const target = path.join(__dirname, 'public', `${base}.php`);
+  if (fs.existsSync(target)) {
+    const rendered = renderPhpFile(target);
+    if (rendered) {
+      return res.type('html').send(rendered);
+    }
+  }
+  next();
+});
+
+// Static Folders (CSS, JS, images, uploads)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -471,8 +494,9 @@ function sendPhpOrHtml(req, res, baseName) {
   res.status(404).send('Page not found');
 }
 
-// Page Routes supporting both .php and clean URLs
-app.get(['/', '/index', '/index.html', '/index.php'], (req, res) => {
+
+// Page Routes supporting .php and clean URLs
+app.get(['/', '/index', '/index.php'], (req, res) => {
   sendPhpOrHtml(req, res, 'index');
 });
 
@@ -982,20 +1006,20 @@ app.delete('/api/admin/users/:id', async (req, res) => {
   }
 });
 
-// 14. Catch-all: Route to public files or index.html
+// 14. Catch-all: Route to public files or index.php
 app.use((req, res) => {
   const filePath = path.join(__dirname, 'public', req.path);
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     return res.sendFile(filePath);
   }
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  sendPhpOrHtml(req, res, 'index');
 });
 
 // Start Server locally if run directly via node server.js
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🚀 VIRAL PROMPT Server is running on http://localhost:${PORT}`);
-    console.log(`🔑 Admin Panel available at http://localhost:${PORT}/admin.html`);
+    console.log(`🔑 Admin Panel available at http://localhost:${PORT}/admin.php`);
   });
 }
 

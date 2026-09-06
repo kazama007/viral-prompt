@@ -26,7 +26,7 @@
     localStorage.removeItem('promptmaster_user');
     localStorage.removeItem('vip_token');
     localStorage.removeItem('isVip');
-    window.location.href = 'login.html';
+    window.location.href = 'login.php';
   };
 
   async function updateHeaderNav() {
@@ -69,23 +69,23 @@
     }
 
     if (currentUser) {
-      // Subscribed / Logged In User Navigation — Exact soniprompts.com format
+      // Subscribed / Logged In User Navigation
       nav.innerHTML = `
-        <a href="index.html" class="${page === 'index' ? 'active' : ''}">Home</a>
-        <a href="browse.html" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
-        <a href="community.html" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
-        <a href="account.html" class="${page === 'account' ? 'active' : ''}">My Account</a>
+        <a href="index.php" class="${page === 'index' ? 'active' : ''}">Home</a>
+        <a href="browse.php" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
+        <a href="community.php" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
+        <a href="account.php" class="${page === 'account' ? 'active' : ''}">My Account</a>
         <a href="javascript:void(0)" onclick="userLogout()" class="nav-btn">Logout</a>
       `;
     } else {
-      // Guest / Logged Out Navigation — Exact soniprompts.com format
+      // Guest / Logged Out Navigation
       nav.innerHTML = `
-        <a href="index.html" class="${page === 'index' ? 'active' : ''}">Home</a>
-        <a href="browse.html" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
-        <a href="community.html" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
-        <a href="pricing.html" class="${page === 'pricing' ? 'active' : ''}">Join Community</a>
-        <a href="login.html" class="${page === 'login' ? 'active' : ''}">Login</a>
-        <a href="register.html" class="nav-btn">Get Started</a>
+        <a href="index.php" class="${page === 'index' ? 'active' : ''}">Home</a>
+        <a href="browse.php" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
+        <a href="community.php" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
+        <a href="pricing.php" class="${page === 'pricing' ? 'active' : ''}">Join Community</a>
+        <a href="login.php" class="${page === 'login' ? 'active' : ''}">Login</a>
+        <a href="register.php" class="nav-btn">Get Started</a>
       `;
     }
   }

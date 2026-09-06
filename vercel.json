@@ -1,7 +1,11 @@
 {
   "version": 2,
+  "redirects": [
+    { "source": "/(.*)\\.html", "destination": "/$1.php", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/(.*)\\.php", "destination": "/api/index.js" }
+    { "source": "/(.*)\\.php", "destination": "/api/index.js" },
+    { "source": "/", "destination": "/api/index.js" }
   ]
 }
