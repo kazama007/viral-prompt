@@ -403,40 +403,139 @@ app.get('/api/prompts/:id', async (req, res) => {
   });
 });
 
-// Prompt Detail Page routing for both .php and .html URLs
-app.get(['/prompt.php', '/prompt', '/prompt.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'prompt.html'));
+// ─── PHP Page Template Renderer ───
+function renderPhpFile(filePath, context = {}) {
+  if (!fs.existsSync(filePath)) return null;
+  let content = fs.readFileSync(filePath, 'utf8');
+
+  // Recursively resolve includes / requires
+  content = content.replace(/<\?php[\s\S]*?(?:include|require|include_once|require_once)[\s\S]*?__DIR__\s*\.\s*['"]([^'"]+)['"];?[\s\S]*?\?>/g, (match, relPath) => {
+    const target = path.join(path.dirname(filePath), relPath);
+    if (fs.existsSync(target)) {
+      return renderPhpFile(target, context);
+    }
+    return '';
+  });
+
+  // Common replacements
+  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$SITE_NAME\);\s*\?>/g, 'VIRAL PROMPT');
+  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$pageTitle\);\s*\?>/g, context.pageTitle || 'VIRAL PROMPT — Viral AI Video Prompts');
+  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$pageDesc\);\s*\?>/g, context.pageDesc || 'Viral AI video prompts for Reels, Shorts & TikTok.');
+  content = content.replace(/<\?php\s+echo\s+\$CURRENT_YEAR;\s*\?>/g, '2026');
+  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$FACEBOOK_URL\);\s*\?>/g, 'https://www.facebook.com');
+  content = content.replace(/<\?php\s+echo\s+htmlspecialchars\(\$WHATSAPP_CHANNEL\);\s*\?>/g, 'https://whatsapp.com/channel/0029VbCl6nB002TFkWMBP43S');
+  content = content.replace(/<\?php\s+if\s+\(!empty\(\$extraHead\)\)\s+echo\s+\$extraHead;\s*\?>/g, `
+    <style>
+      .btn-subscribe-premium {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #6d5dfc;
+        color: #ffffff !important;
+        font-size: 15.5px;
+        font-weight: 600;
+        padding: 13px 44px;
+        border-radius: 999px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 14px rgba(109, 93, 252, 0.35);
+        border: none;
+        cursor: pointer;
+        margin: 0 auto;
+        align-self: center;
+      }
+      .btn-subscribe-premium:hover {
+        background: #5b4af7;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(109, 93, 252, 0.45);
+      }
+    </style>
+  `);
+  content = content.replace(/<\?php\s+if\s+\(!empty\(\$extraScripts\)\)\s+echo\s+\$extraScripts;\s*\?>/g, '');
+  content = content.replace(/<\?php[\s\S]*?\?>/g, '');
+  return content;
+}
+
+function sendPhpOrHtml(req, res, baseName) {
+  const phpPath = path.join(__dirname, 'public', `${baseName}.php`);
+  if (fs.existsSync(phpPath)) {
+    const rendered = renderPhpFile(phpPath);
+    if (rendered) {
+      return res.type('html').send(rendered);
+    }
+  }
+  const htmlPath = path.join(__dirname, 'public', `${baseName}.html`);
+  if (fs.existsSync(htmlPath)) {
+    return res.sendFile(htmlPath);
+  }
+  res.status(404).send('Page not found');
+}
+
+// Page Routes supporting both .php and clean URLs
+app.get(['/', '/index', '/index.html', '/index.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'index');
 });
 
-// Account Page routing for both .php and .html URLs
-app.get(['/account.php', '/account', '/account.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'account.html'));
+app.get(['/prompt', '/prompt.html', '/prompt.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'prompt');
 });
 
-// Other common soniprompts routes
-app.get(['/browse.php'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'browse.html'));
+app.get(['/browse', '/browse.html', '/browse.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'browse');
 });
-app.get(['/community.php'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'community.html'));
+
+app.get(['/account', '/account.html', '/account.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'account');
 });
-app.get(['/pricing.php'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'pricing.html'));
+
+app.get(['/pricing', '/pricing.html', '/pricing.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'pricing');
 });
-app.get(['/contact.php'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'contact.html'));
+
+app.get(['/community', '/community.html', '/community.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'community');
 });
-app.get(['/privacy.php'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+
+app.get(['/contact', '/contact.html', '/contact.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'contact');
 });
-app.get(['/terms.php'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+
+app.get(['/privacy', '/privacy.html', '/privacy.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'privacy');
 });
-app.get(['/refund.php', '/refunds.php'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'refunds.html'));
+
+app.get(['/terms', '/terms.html', '/terms.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'terms');
 });
+
+app.get(['/refunds', '/refunds.html', '/refunds.php', '/refund.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'refunds');
+});
+
+app.get(['/login', '/login.html', '/login.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'login');
+});
+
+app.get(['/register', '/register.html', '/register.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'register');
+});
+
+app.get(['/admin', '/admin.html', '/admin.php'], (req, res) => {
+  sendPhpOrHtml(req, res, 'admin');
+});
+
 app.get('/logout.php', (req, res) => {
-  res.redirect('/login.html?logout=1');
+  res.redirect('/login.php?logout=1');
+});
+
+// Generic catch-all for any requested .php file in public
+app.get(/.*\.php$/, (req, res, next) => {
+  const baseName = req.path.replace(/^\//, '').replace(/\.php$/, '');
+  const phpPath = path.join(__dirname, 'public', `${baseName}.php`);
+  if (fs.existsSync(phpPath)) {
+    return sendPhpOrHtml(req, res, baseName);
+  }
+  next();
 });
 
 // ─── Community API Routes ───
