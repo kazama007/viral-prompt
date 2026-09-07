@@ -27,7 +27,7 @@ include __DIR__ . '/includes/header.php';
       </form>
 
       <p style="text-align:center;font-size:14px;color:var(--muted);margin-top:20px;">
-        Don't have an account? <a href="register.php" style="font-weight:700;">Create Account</a>
+        Don't have an account? <a href="/register" style="font-weight:700;">Create Account</a>
       </p>
     </div>
   </main>
@@ -60,7 +60,9 @@ include __DIR__ . '/includes/header.php';
           alertBox.style.border = '1px solid #b7ecc8';
           alertBox.innerHTML = '✅ Welcome back, ' + data.user.name + '! Redirecting...';
           alertBox.style.display = 'block';
-          const nextUrl = new URLSearchParams(window.location.search).get('next') || 'index.php';
+          let nextUrl = new URLSearchParams(window.location.search).get('next') || '/';
+          if (nextUrl === 'index.php' || nextUrl === '/index.php') nextUrl = '/';
+          else if (nextUrl.includes('.php')) nextUrl = nextUrl.replace(/\.php(\?|$)/, '$1');
           setTimeout(() => {
             window.location.href = nextUrl;
           }, 800);

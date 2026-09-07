@@ -73,7 +73,7 @@ include __DIR__ . '/includes/header.php';
           <p id="accActivatedRow" style="font-size:13.5px;color:var(--muted);margin-bottom:14px;"><strong>Activated on:</strong> <span id="accActivated">...</span></p>
 
           <div id="accBtnGroup" style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-            <a href="browse.php" class="btn btn-primary" id="accPrimaryBtn">Browse Prompts</a>
+            <a href="/browse" class="btn btn-primary" id="accPrimaryBtn">Browse Prompts</a>
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ include __DIR__ . '/includes/header.php';
       }
       const token = localStorage.getItem('promptmaster_token') || localStorage.getItem('vip_token') || urlToken;
       if (!token) {
-        window.location.href = 'login.php?next=account.php';
+        window.location.href = '/login?next=/account';
         return;
       }
 
@@ -106,7 +106,7 @@ include __DIR__ . '/includes/header.php';
         if (res.status === 401 || res.status === 403) {
           localStorage.removeItem('promptmaster_token');
           localStorage.removeItem('promptmaster_user');
-          window.location.href = 'login.php?next=account.php';
+          window.location.href = '/login?next=/account';
           return;
         }
         const data = await res.json();
@@ -117,7 +117,7 @@ include __DIR__ . '/includes/header.php';
           } catch (e) {}
         }
         if (!user) {
-          window.location.href = 'login.php?next=account.php';
+          window.location.href = '/login?next=/account';
           return;
         }
         localStorage.setItem('promptmaster_user', JSON.stringify(user));
@@ -195,7 +195,7 @@ include __DIR__ . '/includes/header.php';
           startLiveCountdown(user.subscription.expiresAt, user.subscription.grantedAt);
 
           btnGroup.innerHTML = `
-            <a href="browse.php" class="btn btn-primary">Browse Prompts</a>
+            <a href="/browse" class="btn btn-primary">Browse Prompts</a>
             <a href="https://wa.me/919410610800?text=Hi%21+I%27m+a+VIRAL+PROMPT+VIP+subscriber.+I+want+to+extend+my+subscription." target="_blank" rel="noopener" class="btn btn-outline" style="display:inline-flex;align-items:center;gap:6px;">
               💬 Extend on WhatsApp
             </a>
@@ -214,7 +214,7 @@ include __DIR__ . '/includes/header.php';
           document.getElementById('accActivatedRow').style.display = 'none';
           btnGroup.innerHTML = `
             <a href="https://wa.me/919410610800?text=Hi%21+I+want+to+activate+VIP+subscription+on+VIRAL+PROMPT+for+2.5+dollars" target="_blank" rel="noopener" class="btn btn-primary" style="background:#25D366;border-color:#25D366;">Activate VIP on WhatsApp ($2.5/mo)</a>
-            <a href="browse.php" class="btn btn-outline" style="margin-left:8px;">Browse Free Prompts</a>
+            <a href="/browse" class="btn btn-outline" style="margin-left:8px;">Browse Free Prompts</a>
           `;
         }
 

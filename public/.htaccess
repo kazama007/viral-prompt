@@ -2,9 +2,29 @@
   RewriteEngine On
   RewriteBase /
 
-  # Redirect all .html requests to .php (301 Permanent)
+  # 1. Redirect /index.php, /index.html, or /index to /
+  RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+index(?:\.(?:php|html))?[\s?] [NC]
+  RewriteRule ^index(?:\.(?:php|html))?$ / [R=301,L,NE]
+
+  # 2. Redirect any direct .php request to clean URL (prevents .php in browser address bar)
+  RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+?)\.php[\s?] [NC]
+  RewriteRule ^(.+?)\.php$ /$1 [R=301,L,NE]
+
+  # 3. Redirect any direct .html request to clean URL
   RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+?)\.html[\s?] [NC]
-  RewriteRule ^ %1.php [R=301,L]
+  RewriteRule ^(.+?)\.html$ /$1 [R=301,L,NE]
+
+  # 4. Internally rewrite /page to /page.php if page.php exists
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME}.php -f
+  RewriteRule ^(.+?)/?$ $1.php [L,QSA]
+
+  # 5. Internally rewrite /page to /page.html if page.html exists
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME}.html -f
+  RewriteRule ^(.+?)/?$ $1.html [L,QSA]
 
   # DirectoryIndex prefers PHP
   DirectoryIndex index.php index.html

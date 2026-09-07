@@ -29,12 +29,12 @@
 
   <header class="site-header">
     <div class="container header-inner admin-container">
-      <a href="index.php" class="brand">
+      <a href="/" class="brand">
         <img src="assets/images/logo.png" alt="VIRAL PROMPT" class="brand-icon-img" width="36" height="36">
         <span>PROMPT <b>MASTER</b> <span style="font-size:13px;background:#111827;color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;">ADMIN BACKEND</span></span>
       </a>
       <div style="display:flex;align-items:center;gap:12px;">
-        <a href="index.php" class="btn btn-outline btn-sm">👁 View Live Website</a>
+        <a href="/" class="btn btn-outline btn-sm">👁 View Live Website</a>
         <button id="logoutBtn" class="btn btn-sm btn-danger" style="display:none;" onclick="adminLogout()">Logout</button>
       </div>
     </div>

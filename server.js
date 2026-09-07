@@ -23,26 +23,34 @@ app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Redirect any .html requests to .php
+// ── Clean URLs Middleware ──
+// Redirect /index.php, /index.html, /index to /
+// Redirect all *.php and *.html requests to clean URLs without extension
 app.use((req, res, next) => {
-  if (req.path && req.path.endsWith('.html')) {
-    const target = req.path.replace(/\.html$/, '.php');
-    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-    return res.redirect(301, target + qs);
-  }
-  next();
-});
+  if (!req.path) return next();
 
-// Intercept .php requests and render as HTML with includes
-app.get(/.*\.php$/, (req, res, next) => {
-  const base = path.basename(req.path, '.php');
-  const target = path.join(__dirname, 'public', `${base}.php`);
-  if (fs.existsSync(target)) {
-    const rendered = renderPhpFile(target);
-    if (rendered) {
-      return res.type('html').send(rendered);
-    }
+  const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  const pathname = req.path;
+
+  // 1. Redirect /index.php, /index.html, /index to /
+  if (pathname === '/index.php' || pathname === '/index.html' || pathname === '/index') {
+    return res.redirect(301, '/' + qs);
   }
+
+  // 2. Redirect /logout.php or /logout to /login?logout=1
+  if (pathname === '/logout.php' || pathname === '/logout') {
+    return res.redirect(302, '/login?logout=1');
+  }
+
+  // 3. Redirect any other .php or .html request to clean URL (without extension)
+  if (pathname.endsWith('.php') || pathname.endsWith('.html')) {
+    const cleanPath = pathname.replace(/\.(php|html)$/, '');
+    if (cleanPath === '/index' || cleanPath === '') {
+      return res.redirect(301, '/' + qs);
+    }
+    return res.redirect(301, cleanPath + qs);
+  }
+
   next();
 });
 
@@ -714,69 +722,126 @@ function sendPhpOrHtml(req, res, baseName) {
 }
 
 
-// Page Routes supporting .php and clean URLs
+// Page Routes supporting clean URLs
 app.get(['/', '/index', '/index.php'], (req, res) => {
+  if (req.path !== '/') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/' + qs);
+  }
   sendPhpOrHtml(req, res, 'index');
 });
 
 app.get(['/prompt', '/prompt.html', '/prompt.php'], (req, res) => {
+  if (req.path !== '/prompt') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/prompt' + qs);
+  }
   sendPhpOrHtml(req, res, 'prompt');
 });
 
 app.get(['/browse', '/browse.html', '/browse.php'], (req, res) => {
+  if (req.path !== '/browse') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/browse' + qs);
+  }
   sendPhpOrHtml(req, res, 'browse');
 });
 
 app.get(['/account', '/account.html', '/account.php'], (req, res) => {
+  if (req.path !== '/account') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/account' + qs);
+  }
   sendPhpOrHtml(req, res, 'account');
 });
 
 app.get(['/pricing', '/pricing.html', '/pricing.php'], (req, res) => {
+  if (req.path !== '/pricing') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/pricing' + qs);
+  }
   sendPhpOrHtml(req, res, 'pricing');
 });
 
 app.get(['/community', '/community.html', '/community.php'], (req, res) => {
+  if (req.path !== '/community') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/community' + qs);
+  }
   sendPhpOrHtml(req, res, 'community');
 });
 
 app.get(['/contact', '/contact.html', '/contact.php'], (req, res) => {
+  if (req.path !== '/contact') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/contact' + qs);
+  }
   sendPhpOrHtml(req, res, 'contact');
 });
 
 app.get(['/privacy', '/privacy.html', '/privacy.php'], (req, res) => {
+  if (req.path !== '/privacy') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/privacy' + qs);
+  }
   sendPhpOrHtml(req, res, 'privacy');
 });
 
 app.get(['/terms', '/terms.html', '/terms.php'], (req, res) => {
+  if (req.path !== '/terms') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/terms' + qs);
+  }
   sendPhpOrHtml(req, res, 'terms');
 });
 
-app.get(['/refunds', '/refunds.html', '/refunds.php', '/refund.php'], (req, res) => {
+app.get(['/refunds', '/refund', '/refunds.html', '/refunds.php', '/refund.php'], (req, res) => {
+  if (req.path !== '/refunds') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/refunds' + qs);
+  }
   sendPhpOrHtml(req, res, 'refunds');
 });
 
 app.get(['/login', '/login.html', '/login.php'], (req, res) => {
+  if (req.path !== '/login') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/login' + qs);
+  }
   sendPhpOrHtml(req, res, 'login');
 });
 
 app.get(['/register', '/register.html', '/register.php'], (req, res) => {
+  if (req.path !== '/register') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/register' + qs);
+  }
   sendPhpOrHtml(req, res, 'register');
 });
 
 app.get(['/admin', '/admin.html', '/admin.php'], (req, res) => {
+  if (req.path !== '/admin') {
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, '/admin' + qs);
+  }
   sendPhpOrHtml(req, res, 'admin');
 });
 
-app.get('/logout.php', (req, res) => {
-  res.redirect('/login.php?logout=1');
+app.get(['/logout', '/logout.php'], (req, res) => {
+  res.redirect('/login?logout=1');
 });
 
-// Generic catch-all for any requested .php file in public
-app.get(/.*\.php$/, (req, res, next) => {
-  const baseName = req.path.replace(/^\//, '').replace(/\.php$/, '');
+// Generic route for any page name in public (clean URL)
+app.get('/:page', (req, res, next) => {
+  const baseName = req.params.page;
+  if (!baseName || baseName === 'api' || !/^[a-zA-Z0-9_-]+$/.test(baseName)) return next();
   const phpPath = path.join(__dirname, 'public', `${baseName}.php`);
   if (fs.existsSync(phpPath)) {
     return sendPhpOrHtml(req, res, baseName);
+  }
+  const htmlPath = path.join(__dirname, 'public', `${baseName}.html`);
+  if (fs.existsSync(htmlPath)) {
+    return res.sendFile(htmlPath);
   }
   next();
 });
@@ -1311,7 +1376,7 @@ app.use((req, res) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🚀 VIRAL PROMPT Server is running on http://localhost:${PORT}`);
-    console.log(`🔑 Admin Panel available at http://localhost:${PORT}/admin.php`);
+    console.log(`🔑 Admin Panel available at http://localhost:${PORT}/admin`);
   });
 }
 

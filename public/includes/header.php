@@ -22,7 +22,7 @@ $activePage = isset($activePage) ? $activePage : 'home';
   <!-- Site Header -->
   <header class="site-header">
     <div class="container header-inner">
-      <a href="index.php" class="brand">
+      <a href="/" class="brand">
         <img src="assets/images/logo.png" alt="<?php echo htmlspecialchars($SITE_NAME); ?>" class="brand-icon-img" width="36" height="36">
         <span>VIRAL <b>PROMPT</b></span>
       </a>
@@ -31,13 +31,13 @@ $activePage = isset($activePage) ? $activePage : 'home';
       <label for="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">☰</label>
 
       <nav class="main-nav">
-        <a href="index.php" class="<?php echo $activePage === 'home' ? 'active' : ''; ?>">Home</a>
-        <a href="browse.php" class="<?php echo $activePage === 'browse' ? 'active' : ''; ?>">All Prompts</a>
-        <a href="community.php" class="<?php echo $activePage === 'community' ? 'active' : ''; ?>">Social Corner</a>
-        <a href="pricing.php" class="<?php echo $activePage === 'pricing' ? 'active' : ''; ?>">Join Community</a>
+        <a href="/" class="<?php echo $activePage === 'home' ? 'active' : ''; ?>">Home</a>
+        <a href="/browse" class="<?php echo $activePage === 'browse' ? 'active' : ''; ?>">All Prompts</a>
+        <a href="/community" class="<?php echo $activePage === 'community' ? 'active' : ''; ?>">Social Corner</a>
+        <a href="/pricing" class="<?php echo $activePage === 'pricing' ? 'active' : ''; ?>">Join Community</a>
         <div id="authNavButtons" style="display:inline-flex;align-items:center;gap:12px;">
-          <a href="login.php">Login</a>
-          <a href="register.php" class="nav-btn">Get Started</a>
+          <a href="/login">Login</a>
+          <a href="/register" class="nav-btn">Get Started</a>
         </div>
       </nav>
     </div>

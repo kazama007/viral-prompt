@@ -16,7 +16,7 @@ include __DIR__ . '/includes/header.php';
       <!-- Guest Login Banner (Hidden if logged in) -->
       <div class="mem-banner" id="communityGuestBanner" style="display:none;">
         <span>👋 Login to like posts — join community to post &amp; comment.</span>
-        <a href="login.php?next=community.php" class="btn btn-primary" style="padding:8px 22px;border-radius:999px;font-size:14px;text-decoration:none;">Login Free</a>
+        <a href="/login?next=/community" class="btn btn-primary" style="padding:8px 22px;border-radius:999px;font-size:14px;text-decoration:none;">Login Free</a>
       </div>
 
       <!-- Post Composer (Shown when logged in) -->
@@ -142,7 +142,7 @@ include __DIR__ . '/includes/header.php';
 
       const token = localStorage.getItem('promptmaster_token') || localStorage.getItem('vip_token');
       if (!token) {
-        window.location.href = 'login.php?next=community.php';
+        window.location.href = '/login?next=/community';
         return;
       }
 
@@ -336,7 +336,7 @@ include __DIR__ . '/includes/header.php';
     }
 
     function sharePost(postId) {
-      const url = window.location.origin + '/community.php#' + postId;
+      const url = window.location.origin + '/community#' + postId;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(url);
         showToast('🔗 Link copied to clipboard!');

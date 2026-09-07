@@ -14,19 +14,19 @@ require_once __DIR__ . '/config.php';
       </div>
 
       <nav class="footer-nav f-center">
-        <a href="browse.php">All Prompts</a>
+        <a href="/browse">All Prompts</a>
         <span class="footer-dot">·</span>
-        <a href="community.php">Social Corner</a>
+        <a href="/community">Social Corner</a>
         <span class="footer-dot">·</span>
-        <a href="pricing.php">Join Community</a>
+        <a href="/pricing">Join Community</a>
         <span class="footer-dot">·</span>
-        <a href="contact.php">Contact</a>
+        <a href="/contact">Contact</a>
         <span class="footer-dot">·</span>
-        <a href="privacy.php">Privacy</a>
+        <a href="/privacy">Privacy</a>
         <span class="footer-dot">·</span>
-        <a href="terms.php">Terms</a>
+        <a href="/terms">Terms</a>
         <span class="footer-dot">·</span>
-        <a href="refunds.php">Refunds</a>
+        <a href="/refunds">Refunds</a>
       </nav>
 
       <div class="f-right">
@@ -42,7 +42,7 @@ require_once __DIR__ . '/config.php';
       </div>
 
     </div>
-    <p class="footer-copy">© 2026 <a href="admin.php" style="color:inherit;text-decoration:none;">VIRAL PROMPT</a></p>
+    <p class="footer-copy">© 2026 <a href="/admin" style="color:inherit;text-decoration:none;">VIRAL PROMPT</a></p>
   </footer>
 
   <script src="js/auth-nav.js"></script>

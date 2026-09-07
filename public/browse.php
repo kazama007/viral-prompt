@@ -61,7 +61,7 @@ include __DIR__ . '/includes/header.php';
         <h3 id="mLockHeading" style="font-size:18px;margin-bottom:8px;color:#92400E;font-weight:800;">VIP Community Prompt</h3>
         <p id="mLockText" style="font-size:14.5px;color:#78350F;margin-bottom:20px;max-width:480px;margin-left:auto;margin-right:auto;">This prompt includes the full master prompt system, camera movement rules, and audio hooks. Join the VIRAL PROMPT VIP community to unlock all 280+ prompts.</p>
         <div id="mLockBtnContainer" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-          <a href="pricing.php" class="btn btn-primary" style="background:#6d5dfc;border-radius:999px;padding:12px 28px;">Subscribe — $2.5/month</a>
+          <a href="/pricing" class="btn btn-primary" style="background:#6d5dfc;border-radius:999px;padding:12px 28px;">Subscribe — $2.5/month</a>
           <a href="https://wa.me/919410610800?text=Hello%20VIRAL%20PROMPT%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green" style="border-radius:999px;padding:12px 28px;">Order on WhatsApp</a>
         </div>
       </div>
@@ -223,7 +223,7 @@ include __DIR__ . '/includes/header.php';
               ? p.thumbnail
               : (p.thumbnail.startsWith('/') ? p.thumbnail : '/' + p.thumbnail))
           : '';
-        const detailUrl = `prompt.php?id=${p.numericId || p.id}`;
+        const detailUrl = `/prompt?id=${p.numericId || p.id}`;
 
         let footBtn = '';
         if (isFree) {
@@ -430,7 +430,7 @@ include __DIR__ . '/includes/header.php';
             }
             if (lockBtns) {
               lockBtns.innerHTML = `
-                <a href="login.php?next=${encodeURIComponent('prompt.php?id=' + p.id)}" class="btn btn-primary" style="padding:11px 28px;border-radius:999px;font-weight:700;text-decoration:none;">Login Free — Get This Prompt</a>
+                <a href="/login?next=${encodeURIComponent('/prompt?id=' + p.id)}" class="btn btn-primary" style="padding:11px 28px;border-radius:999px;font-weight:700;text-decoration:none;">Login Free — Get This Prompt</a>
               `;
             }
           } else {
@@ -452,7 +452,7 @@ include __DIR__ . '/includes/header.php';
             }
             if (lockBtns) {
               lockBtns.innerHTML = `
-                <a href="pricing.php" class="btn btn-primary" style="text-decoration:none;background:#6d5dfc;border-radius:999px;padding:12px 28px;">Subscribe — $2.5/month</a>
+                <a href="/pricing" class="btn btn-primary" style="text-decoration:none;background:#6d5dfc;border-radius:999px;padding:12px 28px;">Subscribe — $2.5/month</a>
                 <a href="https://wa.me/919410610800?text=Hello%20VIRAL%20PROMPT%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green" style="text-decoration:none;border-radius:999px;padding:12px 28px;">Order on WhatsApp</a>
               `;
             }

@@ -17,7 +17,7 @@
     if (path.includes('login')) return 'login';
     if (path.includes('register')) return 'register';
     if (path.includes('prompt')) return 'prompt';
-    if (path === '/' || path.endsWith('index.html') || path.endsWith('index.php')) return 'index';
+    if (path === '/' || path.endsWith('/index') || path.endsWith('index.html') || path.endsWith('index.php')) return 'index';
     return '';
   }
 
@@ -26,7 +26,7 @@
     localStorage.removeItem('promptmaster_user');
     localStorage.removeItem('vip_token');
     localStorage.removeItem('isVip');
-    window.location.href = 'login.php';
+    window.location.href = '/login';
   };
 
   async function updateHeaderNav() {
@@ -71,21 +71,21 @@
     if (currentUser) {
       // Subscribed / Logged In User Navigation
       nav.innerHTML = `
-        <a href="index.php" class="${page === 'index' ? 'active' : ''}">Home</a>
-        <a href="browse.php" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
-        <a href="community.php" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
-        <a href="account.php" class="${page === 'account' ? 'active' : ''}">My Account</a>
+        <a href="/" class="${page === 'index' ? 'active' : ''}">Home</a>
+        <a href="/browse" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
+        <a href="/community" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
+        <a href="/account" class="${page === 'account' ? 'active' : ''}">My Account</a>
         <a href="javascript:void(0)" onclick="userLogout()" class="nav-btn">Logout</a>
       `;
     } else {
       // Guest / Logged Out Navigation
       nav.innerHTML = `
-        <a href="index.php" class="${page === 'index' ? 'active' : ''}">Home</a>
-        <a href="browse.php" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
-        <a href="community.php" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
-        <a href="pricing.php" class="${page === 'pricing' ? 'active' : ''}">Join Community</a>
-        <a href="login.php" class="${page === 'login' ? 'active' : ''}">Login</a>
-        <a href="register.php" class="nav-btn">Get Started</a>
+        <a href="/" class="${page === 'index' ? 'active' : ''}">Home</a>
+        <a href="/browse" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
+        <a href="/community" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
+        <a href="/pricing" class="${page === 'pricing' ? 'active' : ''}">Join Community</a>
+        <a href="/login" class="${page === 'login' ? 'active' : ''}">Login</a>
+        <a href="/register" class="nav-btn">Get Started</a>
       `;
     }
   }

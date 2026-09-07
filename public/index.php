@@ -12,69 +12,69 @@ include __DIR__ . '/includes/header.php';
     <div class="cover-marquee-wrap" id="coverMarquee" title="Hover to pause • Click any prompt box">
       <div class="marquee-track">
         <!-- Set 1 (User's prompt thumbnail boxes) -->
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=284'" title="30 Sec Ultra Viral Infrastructure Disaster">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=284'" title="30 Sec Ultra Viral Infrastructure Disaster">
           <img src="assets/images/marquee/card_disaster.png" alt="Infrastructure Disaster" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=283'" title="30 Sec Viral Ghost Baby Horror">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=283'" title="30 Sec Viral Ghost Baby Horror">
           <img src="assets/images/marquee/card_ghost.png" alt="Ghost Baby Horror" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=280'" title="30 Sec Viral Prison Reunion">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=280'" title="30 Sec Viral Prison Reunion">
           <img src="assets/images/marquee/card_prison.png" alt="Prison Reunion" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=285'" title="30 Sec Cosmic Space Journey">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=285'" title="30 Sec Cosmic Space Journey">
           <img src="assets/images/marquee/card_cosmic.png" alt="Cosmic Space Journey" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=270'" title="30-Second Giant Beehive">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=270'" title="30-Second Giant Beehive">
           <img src="assets/images/marquee/card_5.png" alt="Giant Beehive" loading="eager">
           <span class="marquee-badge is-free">🎁 Free</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=264'" title="Nano Banana Bulk Image Generation">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=264'" title="Nano Banana Bulk Image Generation">
           <img src="assets/images/marquee/card_7.png" alt="Nano Banana Bulk Generator" loading="eager">
           <span class="marquee-badge is-free">🎁 Free</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=284'" title="Cyber Realism Video Engine">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=284'" title="Cyber Realism Video Engine">
           <img src="assets/images/marquee/card_6.png" alt="Cyber Realism Engine" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=283'" title="High-Octane Cinematic Chase">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=283'" title="High-Octane Cinematic Chase">
           <img src="assets/images/marquee/card_8.png" alt="Cinematic Chase" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
 
         <!-- Set 2 (Seamless loop duplicate) -->
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=284'" title="30 Sec Ultra Viral Infrastructure Disaster">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=284'" title="30 Sec Ultra Viral Infrastructure Disaster">
           <img src="assets/images/marquee/card_disaster.png" alt="Infrastructure Disaster" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=283'" title="30 Sec Viral Ghost Baby Horror">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=283'" title="30 Sec Viral Ghost Baby Horror">
           <img src="assets/images/marquee/card_ghost.png" alt="Ghost Baby Horror" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=280'" title="30 Sec Viral Prison Reunion">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=280'" title="30 Sec Viral Prison Reunion">
           <img src="assets/images/marquee/card_prison.png" alt="Prison Reunion" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=285'" title="30 Sec Cosmic Space Journey">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=285'" title="30 Sec Cosmic Space Journey">
           <img src="assets/images/marquee/card_cosmic.png" alt="Cosmic Space Journey" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=270'" title="30-Second Giant Beehive">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=270'" title="30-Second Giant Beehive">
           <img src="assets/images/marquee/card_5.png" alt="Giant Beehive" loading="eager">
           <span class="marquee-badge is-free">🎁 Free</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=264'" title="Nano Banana Bulk Image Generation">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=264'" title="Nano Banana Bulk Image Generation">
           <img src="assets/images/marquee/card_7.png" alt="Nano Banana Bulk Generator" loading="eager">
           <span class="marquee-badge is-free">🎁 Free</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=284'" title="Cyber Realism Video Engine">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=284'" title="Cyber Realism Video Engine">
           <img src="assets/images/marquee/card_6.png" alt="Cyber Realism Engine" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
-        <div class="marquee-card" onclick="window.location.href='prompt.php?id=283'" title="High-Octane Cinematic Chase">
+        <div class="marquee-card" onclick="window.location.href='/prompt?id=283'" title="High-Octane Cinematic Chase">
           <img src="assets/images/marquee/card_8.png" alt="Cinematic Chase" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
@@ -104,7 +104,7 @@ include __DIR__ . '/includes/header.php';
         <p style="color:var(--muted);text-align:center;padding:20px;">Loading free prompts from backend...</p>
       </div>
       <p style="text-align:center;margin:10px 0 30px;">
-        <a href="browse.php?type=free" class="btn btn-primary">Load More Free Prompts →</a>
+        <a href="/browse?type=free" class="btn btn-primary">Load More Free Prompts →</a>
       </p>
 
       <!-- Premium Prompts Section -->
@@ -113,7 +113,7 @@ include __DIR__ . '/includes/header.php';
         <p style="color:var(--muted);text-align:center;padding:20px;">Loading premium prompts from backend...</p>
       </div>
       <p style="text-align:center;margin:10px 0 30px;">
-        <a href="browse.php?type=premium" class="btn btn-primary">Load More Prompts →</a>
+        <a href="/browse?type=premium" class="btn btn-primary">Load More Prompts →</a>
       </p>
 
     </div>
@@ -134,7 +134,7 @@ include __DIR__ . '/includes/header.php';
         <h3 id="mLockHeading" style="font-size:18px;font-weight:800;margin-bottom:6px;">Premium Member Prompt</h3>
         <p id="mLockText" style="font-size:14px;color:#78350f;margin-bottom:18px;">This prompt includes the full master system prompt, camera movements, and audio hooks. Join our community to unlock all 280+ prompts.</p>
         <div id="mLockBtnContainer" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-          <a href="pricing.php" class="btn btn-primary btn-sm" style="background:#6d5dfc;border-radius:999px;padding:10px 24px;">Subscribe — $2.5/month</a>
+          <a href="/pricing" class="btn btn-primary btn-sm" style="background:#6d5dfc;border-radius:999px;padding:10px 24px;">Subscribe — $2.5/month</a>
           <a href="https://wa.me/919410610800?text=Hello%20VIRAL%20PROMPT%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green btn-sm" style="border-radius:999px;padding:10px 24px;">Order on WhatsApp</a>
         </div>
       </div>
@@ -207,7 +207,7 @@ include __DIR__ . '/includes/header.php';
         return;
       }
       container.innerHTML = freeList.slice(0, 4).map(p => `
-        <a class="prow" href="prompt.php?id=${p.numericId || p.id}">
+        <a class="prow" href="/prompt?id=${p.numericId || p.id}">
           <div class="prow-thumb">
             <img src="${p.thumbnail}" alt="${p.title}" loading="lazy" decoding="async">
             <span class="prow-file-badge">
@@ -236,7 +236,7 @@ include __DIR__ . '/includes/header.php';
       container.innerHTML = premList.slice(0, 10).map(p => {
         if (isVip) {
           return `
-            <a class="prow" href="prompt.php?id=${p.numericId || p.id}">
+            <a class="prow" href="/prompt?id=${p.numericId || p.id}">
               <div class="prow-thumb">
                 <img src="${p.thumbnail}" alt="${p.title}" loading="lazy" decoding="async">
                 <span class="prow-file-badge">
@@ -253,7 +253,7 @@ include __DIR__ . '/includes/header.php';
           `;
         } else {
           return `
-            <a class="prow" href="prompt.php?id=${p.numericId || p.id}">
+            <a class="prow" href="/prompt?id=${p.numericId || p.id}">
               <div class="prow-thumb">
                 <img src="${p.thumbnail}" alt="${p.title}" loading="lazy" decoding="async">
                 <span class="prow-file-badge is-locked">🔒</span>
@@ -383,7 +383,7 @@ include __DIR__ . '/includes/header.php';
             }
             if (lockBtns) {
               lockBtns.innerHTML = `
-                <a href="login.php?next=${encodeURIComponent('prompt.php?id=' + p.id)}" class="btn btn-primary" style="padding:11px 28px;border-radius:999px;font-weight:700;text-decoration:none;">Login Free — Get This Prompt</a>
+                <a href="/login?next=${encodeURIComponent('/prompt?id=' + p.id)}" class="btn btn-primary" style="padding:11px 28px;border-radius:999px;font-weight:700;text-decoration:none;">Login Free — Get This Prompt</a>
               `;
             }
           } else {
@@ -405,7 +405,7 @@ include __DIR__ . '/includes/header.php';
             }
             if (lockBtns) {
               lockBtns.innerHTML = `
-                <a href="pricing.php" class="btn btn-primary btn-sm" style="background:#6d5dfc;border-radius:999px;padding:10px 24px;text-decoration:none;">Subscribe — $2.5/month</a>
+                <a href="/pricing" class="btn btn-primary btn-sm" style="background:#6d5dfc;border-radius:999px;padding:10px 24px;text-decoration:none;">Subscribe — $2.5/month</a>
                 <a href="https://wa.me/919410610800?text=Hello%20VIRAL%20PROMPT%2C%20I%20want%20to%20unlock%20prompts" target="_blank" class="btn btn-green btn-sm" style="border-radius:999px;padding:10px 24px;text-decoration:none;">Order on WhatsApp</a>
               `;
             }
