@@ -7,7 +7,7 @@ require_once __DIR__ . '/config.php';
 
       <div class="f-left">
         <div class="footer-brand">
-          <img src="assets/images/logo.png" alt="<?php echo htmlspecialchars($SITE_NAME); ?>" class="brand-icon-img" width="30" height="30" style="width:30px;height:30px;">
+          <img src="/assets/images/logo.png" alt="<?php echo htmlspecialchars($SITE_NAME); ?>" class="brand-icon-img" width="30" height="30" style="width:30px;height:30px;">
           <span>VIRAL <b>PROMPT</b></span>
         </div>
         <p class="footer-tag">Viral AI video prompts by <?php echo htmlspecialchars($SITE_NAME); ?></p>
@@ -45,7 +45,7 @@ require_once __DIR__ . '/config.php';
     <p class="footer-copy">© 2026 <a href="/admin" style="color:inherit;text-decoration:none;">VIRAL PROMPT</a></p>
   </footer>
 
-  <script src="js/auth-nav.js"></script>
+  <script src="/js/auth-nav.js"></script>
 <?php if (!empty($extraScripts)) echo $extraScripts; ?>
 </body>
 </html>

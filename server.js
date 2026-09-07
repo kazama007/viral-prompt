@@ -608,6 +608,12 @@ app.get('/api/prompts/:id', async (req, res) => {
   // Premium prompt is unlocked only if user has active VIP!
   const isUnlocked = prompt.type === 'free' ? isLoggedIn : isVip;
 
+  if (!token) {
+    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
+  } else {
+    res.setHeader('Cache-Control', 'private, no-cache');
+  }
+
   res.json({
     success: true,
     prompt: {
@@ -624,7 +630,14 @@ app.get('/api/prompts/:id', async (req, res) => {
 });
 
 // ─── Robust PHP Page Template Renderer ───
+const renderedPageCache = new Map();
+
 function renderPhpFile(filePath, context = {}) {
+  const cacheKey = filePath;
+  if (renderedPageCache.has(cacheKey)) {
+    return renderedPageCache.get(cacheKey);
+  }
+
   if (!fs.existsSync(filePath)) return null;
   let rawContent = fs.readFileSync(filePath, 'utf8');
 
@@ -723,10 +736,13 @@ function renderPhpFile(filePath, context = {}) {
   // Strip any remaining PHP code in body
   bodyContent = bodyContent.replace(/<\?php[\s\S]*?\?>/g, '');
 
-  return headerContent.trim() + '\n' + bodyContent.trim() + '\n' + footerContent.trim();
+  const finalHtml = headerContent.trim() + '\n' + bodyContent.trim() + '\n' + footerContent.trim();
+  renderedPageCache.set(cacheKey, finalHtml);
+  return finalHtml;
 }
 
 function sendPhpOrHtml(req, res, baseName) {
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
   const phpPath = path.join(__dirname, 'public', `${baseName}.php`);
   if (fs.existsSync(phpPath)) {
     const rendered = renderPhpFile(phpPath);

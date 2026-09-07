@@ -108,4 +108,36 @@
   } else {
     updateHeaderNav();
   }
+
+  // Instant Link Prefetching for Ultra-Smooth Page Transitions
+  (function initLinkPrefetch() {
+    const prefetched = new Set();
+    function prefetchUrl(url) {
+      if (!url || prefetched.has(url)) return;
+      if (url.startsWith('#') || url.startsWith('javascript:') || url.startsWith('mailto:') || url.startsWith('tel:')) return;
+      try {
+        const u = new URL(url, window.location.origin);
+        if (u.origin !== window.location.origin) return;
+        // Don't prefetch auth actions or external APIs
+        if (u.pathname.startsWith('/api') || u.pathname.includes('logout')) return;
+        prefetched.add(url);
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = u.pathname + u.search;
+        link.as = 'document';
+        document.head.appendChild(link);
+      } catch (e) {}
+    }
+
+    document.addEventListener('mouseover', function (e) {
+      const a = e.target.closest('a');
+      if (a && a.href) prefetchUrl(a.href);
+    }, { passive: true });
+
+    document.addEventListener('touchstart', function (e) {
+      const a = e.target.closest('a');
+      if (a && a.href) prefetchUrl(a.href);
+    }, { passive: true });
+  })();
 })();
+

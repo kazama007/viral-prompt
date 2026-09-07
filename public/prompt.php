@@ -269,17 +269,41 @@ include __DIR__ . '/includes/header.php';
       }
     }
 
+    // Instant cache prefill (0ms)
+    function prefillPromptFromCache() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id') || '270';
+      try {
+        const list1 = JSON.parse(localStorage.getItem('pm_browse_prompts_v1') || '[]');
+        const list2 = JSON.parse(localStorage.getItem('pm_home_prompts_v1') || '[]');
+        const p = [...list1, ...list2].find(item => String(item.id) === String(id) || String(item.numericId) === String(id));
+        if (p) {
+          document.title = `${p.title} — <?php echo htmlspecialchars($SITE_NAME); ?>`;
+          const titleEl = document.getElementById('pTitle');
+          if (titleEl) titleEl.textContent = p.title;
+          const catEl = document.getElementById('pCat');
+          if (catEl) catEl.textContent = '🏷 ' + (p.category || 'General');
+          const dateEl = document.getElementById('pDate');
+          if (dateEl) dateEl.textContent = '🕒 Updated ' + (p.updatedDate || '29 Aug 2026');
+          const badge = document.getElementById('pBadge');
+          if (badge && p.type === 'free') {
+            badge.style.display = 'inline-flex';
+            badge.textContent = 'FREE';
+          }
+        }
+      } catch (e) {}
+    }
+    prefillPromptFromCache();
+
     function userLogout() {
       localStorage.removeItem('promptmaster_token');
       localStorage.removeItem('promptmaster_user');
       window.location.reload();
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      checkUserAuth().then(() => {
-        loadPromptDetails();
-      });
-    });
+    // Run prompt loader immediately without waiting in a waterfall
+    loadPromptDetails();
+    checkUserAuth();
   </script>
 
 <?php

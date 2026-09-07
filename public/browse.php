@@ -255,7 +255,7 @@ include __DIR__ . '/includes/header.php';
       const startIdx = (currentPage - 1) * itemsPerPage;
       const pagePrompts = allFetchedPrompts.slice(startIdx, startIdx + itemsPerPage);
 
-      grid.innerHTML = pagePrompts.map(p => {
+      grid.innerHTML = pagePrompts.map((p, idx) => {
         const isFree = p.type === 'free';
         const isUnlocked = isVip || isFree;
         const thumbUrl = p.thumbnail
@@ -287,7 +287,7 @@ include __DIR__ . '/includes/header.php';
           <div class="pcard ${!isUnlocked && p.type === 'premium' ? 'locked' : ''}">
             <div class="pcard-thumb">
               <a href="${detailUrl}" style="display:block;width:100%;height:100%;">
-                <img src="${thumbUrl}" alt="${p.title}" loading="lazy" decoding="async" width="660" height="371">
+                <img src="${thumbUrl}" alt="${p.title}" ${idx < 3 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" width="660" height="371">
               </a>
               ${badgeHtml}
             </div>
