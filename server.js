@@ -70,7 +70,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Database Helper Functions with Vercel Serverless /tmp Support
+// Database Helper Functions with Vercel Serverless /tmp Support & Supabase Cloud Sync
 const TMP_DB_FILE = path.join('/tmp', 'database.json');
 
 function getActiveDbPath() {
@@ -82,15 +82,102 @@ function getActiveDbPath() {
   return DB_FILE;
 }
 
-// Database In-Memory Cache (Avoid re-reading 6.5MB from disk on every single request)
+// Database In-Memory Cache
 let cachedDb = null;
 let lastDbLoadTime = 0;
-const DB_CACHE_TTL = 30 * 1000; // 30 seconds TTL
+const DB_CACHE_TTL = 20 * 1000; // 20 seconds TTL
+let currentSyncPromise = null;
 
+async function syncFromCloudStorage(force = false) {
+  if (currentSyncPromise && !force) {
+    return currentSyncPromise;
+  }
+
+  currentSyncPromise = (async () => {
+    try {
+      const { supabase } = require('./lib/supabase');
+      if (supabase) {
+        const { data, error } = await supabase.storage.from('prompts').download('database.json');
+        if (!error && data) {
+          const text = await data.text();
+          const parsed = JSON.parse(text);
+          if (parsed && Array.isArray(parsed.prompts)) {
+            cachedDb = parsed;
+            lastDbLoadTime = Date.now();
+            if (process.env.VERCEL) {
+              try { fs.writeFileSync(TMP_DB_FILE, text, 'utf8'); } catch (e) {}
+            } else {
+              try { fs.writeFileSync(DB_FILE, text, 'utf8'); } catch (e) {}
+            }
+            console.log(`[Cloud Sync] Loaded ${parsed.prompts.length} prompts from Supabase Storage`);
+            return parsed;
+          }
+        } else if (error) {
+          console.warn('[Cloud Sync Download Warning]:', error.message);
+        }
+      }
+    } catch (err) {
+      console.error('[Cloud Sync Error]:', err.message);
+    } finally {
+      currentSyncPromise = null;
+    }
+    return null;
+  })();
+
+  return currentSyncPromise;
+}
+
+// Initial background sync trigger on startup
+syncFromCloudStorage().catch(() => {});
+
+// Async Database Loader: Guarantees latest data from Cloud with in-memory caching & disk fallbacks
+async function getDatabase(forceReload = false) {
+  const now = Date.now();
+  if (!forceReload && cachedDb && (now - lastDbLoadTime < DB_CACHE_TTL)) {
+    return cachedDb;
+  }
+
+  // Attempt fresh download from Supabase Storage
+  const cloudData = await syncFromCloudStorage(forceReload);
+  if (cloudData) {
+    return cloudData;
+  }
+
+  // Fallback to in-memory cache if cloud download fails
+  if (cachedDb) {
+    return cachedDb;
+  }
+
+  // Fallback to disk
+  try {
+    const activePath = getActiveDbPath();
+    if (fs.existsSync(activePath)) {
+      cachedDb = JSON.parse(fs.readFileSync(activePath, 'utf8'));
+      lastDbLoadTime = now;
+      return cachedDb;
+    }
+    if (fs.existsSync(DB_FILE)) {
+      cachedDb = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+      lastDbLoadTime = now;
+      return cachedDb;
+    }
+  } catch (err) {
+    console.error('Error reading disk database:', err);
+  }
+
+  cachedDb = { admin: { username: 'admin', password: 'Kazama#007' }, categories: [], prompts: [] };
+  lastDbLoadTime = now;
+  return cachedDb;
+}
+
+// Synchronous Database Reader: For backward-compatibility with sync helpers
 function readDatabase(forceReload = false) {
   const now = Date.now();
   if (!forceReload && cachedDb && (now - lastDbLoadTime < DB_CACHE_TTL)) {
     return cachedDb;
+  }
+  if (now - lastDbLoadTime >= DB_CACHE_TTL) {
+    syncFromCloudStorage().catch(() => {});
   }
   try {
     const activePath = getActiveDbPath();
@@ -128,36 +215,47 @@ function readDatabase(forceReload = false) {
   }
 }
 
-function writeDatabase(db) {
+// Async Database Writer: Writes locally AND awaits Supabase Storage upload to persist permanently
+async function writeDatabase(db) {
   cachedDb = db;
   lastDbLoadTime = Date.now();
   const jsonStr = JSON.stringify(db, null, 2);
-  // If running on Vercel, write to /tmp/database.json
+
+  // 1. Write to local file system (/tmp on Vercel, or data/database.json locally)
   if (process.env.VERCEL) {
     try {
       fs.writeFileSync(TMP_DB_FILE, jsonStr, 'utf8');
-      return true;
     } catch (err) {
       console.error('Error writing database to /tmp on Vercel:', err);
     }
+  } else {
+    try {
+      fs.writeFileSync(DB_FILE, jsonStr, 'utf8');
+    } catch (err) {
+      console.error('Error writing database locally:', err);
+    }
   }
-  // Standard local write
+
+  // 2. CRITICAL: Await cloud sync to Supabase Storage so Vercel does not terminate lambda before upload finishes
   try {
-    fs.writeFileSync(DB_FILE, jsonStr, 'utf8');
-    return true;
-  } catch (err) {
-    // If read-only filesystem (e.g. Lambda/Vercel without VERCEL env), fallback to /tmp
-    if (err.code === 'EROFS') {
-      try {
-        fs.writeFileSync(TMP_DB_FILE, jsonStr, 'utf8');
-        return true;
-      } catch (tmpErr) {
-        console.error('Error writing fallback to /tmp:', tmpErr);
+    const { supabase } = require('./lib/supabase');
+    if (supabase) {
+      const { error } = await supabase.storage.from('prompts').upload('database.json', Buffer.from(jsonStr), {
+        contentType: 'application/json',
+        upsert: true,
+        cacheControl: '0'
+      });
+      if (error) {
+        console.error('[Supabase Storage Sync Error]:', error.message);
+      } else {
+        console.log(`[Supabase Storage Sync] database.json (${db.prompts?.length || 0} prompts) updated successfully in cloud`);
       }
     }
-    console.error('Error writing database:', err);
-    return false;
+  } catch (err) {
+    console.error('[Cloud Write Trigger Error]:', err.message);
   }
+
+  return true;
 }
 
 // ─── User Subscription Evaluator & Token Helpers ───
@@ -345,8 +443,8 @@ app.get('/api/auth/me', async (req, res) => {
 // ─── API Routes ───
 
 // 1. Get Prompts (Optimized with lightweight card mapping, pagination, and Edge Cache)
-app.get('/api/prompts', (req, res) => {
-  const db = readDatabase();
+app.get('/api/prompts', async (req, res) => {
+  const db = await getDatabase();
   let prompts = db.prompts || [];
 
   const { category, type, search, sort, limit, offset, full } = req.query;
@@ -371,11 +469,19 @@ app.get('/api/prompts', (req, res) => {
     );
   }
 
-  // Sort
+  // Sort: Ensure newest added prompts are strictly #1 at the top
   if (sort === 'new' || !sort) {
-    prompts.sort((a, b) => (b.numericId || 0) - (a.numericId || 0));
+    prompts.sort((a, b) => {
+      const idA = Number(a.numericId) || Number(a.id) || 0;
+      const idB = Number(b.numericId) || Number(b.id) || 0;
+      return idB - idA;
+    });
   } else if (sort === 'old') {
-    prompts.sort((a, b) => (a.numericId || 0) - (b.numericId || 0));
+    prompts.sort((a, b) => {
+      const idA = Number(a.numericId) || Number(a.id) || 0;
+      const idB = Number(b.numericId) || Number(b.id) || 0;
+      return idA - idB;
+    });
   } else if (sort === 'az') {
     prompts.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
   } else if (sort === 'za') {
@@ -391,8 +497,8 @@ app.get('/api/prompts', (req, res) => {
     prompts = prompts.slice(numOffset, numOffset + numLimit);
   }
 
-  // Edge Caching: 60s cache with stale-while-revalidate for instant global responses
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=300');
+  // Prevent stale caching so newly added prompts appear immediately on the front page
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 
   // Return full objects if explicitly requested (e.g. by admin exports)
   if (full === 'true') {
@@ -413,11 +519,12 @@ app.get('/api/prompts', (req, res) => {
     type: p.type,
     promptCountBadge: p.promptCountBadge,
     thumbnail: p.thumbnail,
+    storyboardImages: p.storyboardImages || [],
     summary: p.summary,
-    views: p.views,
-    likes: p.likes,
-    updatedDate: p.updatedDate,
-    tools: p.tools
+    views: p.views || 0,
+    likes: p.likes || 0,
+    updatedDate: p.updatedDate || p.updated || 'Recent',
+    tools: p.tools || []
   }));
 
   res.json({
@@ -429,7 +536,7 @@ app.get('/api/prompts', (req, res) => {
 
 // 2. Get Single Prompt (Supports Login & VIP unlock check)
 app.get('/api/prompts/:id', async (req, res) => {
-  const db = readDatabase();
+  const db = await getDatabase();
   const prompt = (db.prompts || []).find(p => p.id === req.params.id || String(p.numericId) === req.params.id);
   if (!prompt) {
     return res.status(404).json({ success: false, message: 'Prompt not found' });
@@ -720,18 +827,18 @@ function getSeedCommunityPosts() {
 }
 
 // 1. Get Community Posts
-app.get('/api/community/posts', (req, res) => {
-  const db = readDatabase();
+app.get('/api/community/posts', async (req, res) => {
+  const db = await getDatabase();
   if (!db.communityPosts || !db.communityPosts.length) {
     db.communityPosts = getSeedCommunityPosts();
-    writeDatabase(db);
+    await writeDatabase(db);
   }
   res.json({ success: true, posts: db.communityPosts });
 });
 
 // 2. Create Community Post (Authenticated Users)
 app.post('/api/community/posts', upload.single('media'), async (req, res) => {
-  const db = readDatabase();
+  const db = await getDatabase();
   db.users = db.users || [];
   if (!db.communityPosts || !db.communityPosts.length) {
     db.communityPosts = getSeedCommunityPosts();
@@ -767,14 +874,19 @@ app.post('/api/community/posts', upload.single('media'), async (req, res) => {
   let mediaUrl = null;
   let mediaType = null;
   if (req.file) {
-    mediaUrl = '/uploads/' + req.file.filename;
     mediaType = req.file.mimetype.startsWith('video') ? 'video' : 'image';
     try {
       const fileBuf = fs.readFileSync(req.file.path);
-      uploadToGitHub(fileBuf, req.file.originalname || req.file.filename, req.file.mimetype)
-        .then(ghUrl => { if (ghUrl) newPost.mediaUrl = ghUrl; })
-        .catch(e => console.error('[GitHub Post Media Error]:', e.message));
+      const ghUrl = await uploadToGitHub(fileBuf, req.file.originalname || req.file.filename, req.file.mimetype);
+      if (ghUrl) {
+        mediaUrl = ghUrl;
+      } else {
+        const { uploadToSupabase } = require('./lib/supabase');
+        const sbUrl = await uploadToSupabase(fileBuf, req.file.originalname || req.file.filename, req.file.mimetype);
+        if (sbUrl) mediaUrl = sbUrl;
+      }
     } catch (e) {}
+    if (!mediaUrl) mediaUrl = '/uploads/' + req.file.filename;
   }
 
   const newPost = {
@@ -793,27 +905,27 @@ app.post('/api/community/posts', upload.single('media'), async (req, res) => {
   };
 
   db.communityPosts.unshift(newPost);
-  writeDatabase(db);
+  await writeDatabase(db);
 
   res.json({ success: true, post: newPost });
 });
 
 // 3. Like Post
-app.post('/api/community/posts/:id/like', (req, res) => {
-  const db = readDatabase();
+app.post('/api/community/posts/:id/like', async (req, res) => {
+  const db = await getDatabase();
   db.communityPosts = db.communityPosts || getSeedCommunityPosts();
   const post = db.communityPosts.find(p => p.id === req.params.id);
   if (!post) {
     return res.status(404).json({ success: false, message: 'Post not found' });
   }
   post.likes = (post.likes || 0) + 1;
-  writeDatabase(db);
+  await writeDatabase(db);
   res.json({ success: true, likes: post.likes });
 });
 
 // 4. Add Comment
-app.post('/api/community/posts/:id/comment', (req, res) => {
-  const db = readDatabase();
+app.post('/api/community/posts/:id/comment', async (req, res) => {
+  const db = await getDatabase();
   db.communityPosts = db.communityPosts || getSeedCommunityPosts();
   const post = db.communityPosts.find(p => p.id === req.params.id);
   if (!post) {
@@ -829,22 +941,20 @@ app.post('/api/community/posts/:id/comment', (req, res) => {
     text: text.trim(),
     time: formatDateDayMonthYear(new Date())
   });
-  writeDatabase(db);
+  await writeDatabase(db);
   res.json({ success: true, comments: post.comments });
 });
 
-
-
 // 3. Get Categories with accurate counts
-app.get('/api/categories', (req, res) => {
-  res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300, stale-while-revalidate=600');
-  const db = readDatabase();
+app.get('/api/categories', async (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=300');
+  const db = await getDatabase();
   const categories = db.categories || [];
   const prompts = db.prompts || [];
 
   // Calculate live count per category
   const categoriesWithCounts = categories.map(cat => {
-    const count = prompts.filter(p => p.category.toLowerCase() === cat.name.toLowerCase()).length;
+    const count = prompts.filter(p => (p.category || '').toLowerCase() === cat.name.toLowerCase()).length;
     return { ...cat, count };
   });
 
@@ -856,9 +966,9 @@ app.get('/api/categories', (req, res) => {
 });
 
 // 4. Admin Login
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', async (req, res) => {
   const { username, password } = req.body;
-  const db = readDatabase();
+  const db = await getDatabase();
   const validUsername = process.env.ADMIN_USERNAME || db.admin?.username || 'admin';
   const validPassword = process.env.ADMIN_PASSWORD || db.admin?.password || 'Kazama#007';
 
@@ -880,16 +990,29 @@ app.post('/api/admin/upload', upload.any(), async (req, res) => {
   }
 
   const urls = [];
+  const { uploadToSupabase } = require('./lib/supabase');
+
   for (const f of files) {
-    let fileUrl = '/uploads/' + f.filename;
+    let fileUrl = null;
     try {
       const fileBuf = fs.readFileSync(f.path);
+      // 1. Try GitHub Storage first
       const ghUrl = await uploadToGitHub(fileBuf, f.originalname || f.filename, f.mimetype);
       if (ghUrl) {
         fileUrl = ghUrl;
+      } else {
+        // 2. Fallback to Supabase Storage if GitHub fails
+        const sbUrl = await uploadToSupabase(fileBuf, f.originalname || f.filename, f.mimetype);
+        if (sbUrl) {
+          fileUrl = sbUrl;
+        }
       }
     } catch (err) {
-      console.error('[GitHub Upload Error]:', err.message);
+      console.error('[Admin Upload Error]:', err.message);
+    }
+    // 3. Fallback to local /uploads/ if both cloud storages fail
+    if (!fileUrl) {
+      fileUrl = '/uploads/' + f.filename;
     }
     urls.push(fileUrl);
   }
@@ -898,8 +1021,8 @@ app.post('/api/admin/upload', upload.any(), async (req, res) => {
 });
 
 // 6. Admin Add New Prompt
-app.post('/api/admin/prompts', (req, res) => {
-  const db = readDatabase();
+app.post('/api/admin/prompts', async (req, res) => {
+  const db = await getDatabase();
   const {
     title,
     category,
@@ -918,7 +1041,7 @@ app.post('/api/admin/prompts', (req, res) => {
   }
 
   // Calculate next numeric ID
-  const maxId = (db.prompts || []).reduce((max, p) => Math.max(max, p.numericId || 0), 284);
+  const maxId = (db.prompts || []).reduce((max, p) => Math.max(max, Number(p.numericId || p.id || 0)), 284);
   const nextId = maxId + 1;
 
   let cleanStoryboard = [];
@@ -928,6 +1051,7 @@ app.post('/api/admin/prompts', (req, res) => {
     cleanStoryboard = [storyboardImages.trim()];
   }
 
+  const nowFormatted = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   const newPrompt = {
     id: String(nextId),
     numericId: nextId,
@@ -943,7 +1067,10 @@ app.post('/api/admin/prompts', (req, res) => {
     tools: Array.isArray(tools) ? tools : ['Kling AI', 'Seedance', 'Runway Gen-3'],
     views: 0,
     likes: 0,
-    updatedDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    created: nowFormatted,
+    updated: nowFormatted,
+    updatedDate: nowFormatted,
+    createdAt: new Date().toISOString()
   };
 
   db.prompts.unshift(newPrompt);
@@ -955,13 +1082,13 @@ app.post('/api/admin/prompts', (req, res) => {
     db.categories.push({ id: nextCatId, name: category.trim(), count: 1 });
   }
 
-  writeDatabase(db);
+  await writeDatabase(db);
   res.json({ success: true, message: 'Prompt added successfully', prompt: newPrompt });
 });
 
 // 7. Admin Edit Existing Prompt
-app.put('/api/admin/prompts/:id', (req, res) => {
-  const db = readDatabase();
+app.put('/api/admin/prompts/:id', async (req, res) => {
+  const db = await getDatabase();
   const index = (db.prompts || []).findIndex(p => p.id === req.params.id || String(p.numericId) === req.params.id);
 
   if (index === -1) {
@@ -993,6 +1120,7 @@ app.put('/api/admin/prompts/:id', (req, res) => {
     }
   }
 
+  const nowFormatted = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   db.prompts[index] = {
     ...existing,
     title: title !== undefined ? title.trim() : existing.title,
@@ -1005,16 +1133,17 @@ app.put('/api/admin/prompts/:id', (req, res) => {
     masterPrompt: masterPrompt !== undefined ? masterPrompt.trim() : existing.masterPrompt,
     negativePrompt: negativePrompt !== undefined ? negativePrompt.trim() : existing.negativePrompt,
     tools: tools !== undefined ? tools : existing.tools,
-    updatedDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    updated: nowFormatted,
+    updatedDate: nowFormatted
   };
 
-  writeDatabase(db);
+  await writeDatabase(db);
   res.json({ success: true, message: 'Prompt updated successfully', prompt: db.prompts[index] });
 });
 
 // 8. Admin Delete Prompt
-app.delete('/api/admin/prompts/:id', (req, res) => {
-  const db = readDatabase();
+app.delete('/api/admin/prompts/:id', async (req, res) => {
+  const db = await getDatabase();
   const initialLength = (db.prompts || []).length;
   db.prompts = (db.prompts || []).filter(p => p.id !== req.params.id && String(p.numericId) !== req.params.id);
 
@@ -1022,13 +1151,13 @@ app.delete('/api/admin/prompts/:id', (req, res) => {
     return res.status(404).json({ success: false, message: 'Prompt not found' });
   }
 
-  writeDatabase(db);
+  await writeDatabase(db);
   res.json({ success: true, message: 'Prompt deleted successfully' });
 });
 
 // 9. Admin Add New Category
-app.post('/api/admin/categories', (req, res) => {
-  const db = readDatabase();
+app.post('/api/admin/categories', async (req, res) => {
+  const db = await getDatabase();
   const { name } = req.body;
   if (!name || !name.trim()) {
     return res.status(400).json({ success: false, message: 'Category name is required' });
@@ -1042,17 +1171,17 @@ app.post('/api/admin/categories', (req, res) => {
   const nextId = (db.categories || []).length + 1;
   const newCat = { id: nextId, name: name.trim(), count: 0 };
   db.categories.push(newCat);
-  writeDatabase(db);
+  await writeDatabase(db);
 
   res.json({ success: true, message: 'Category created successfully', category: newCat });
 });
 
 // 10. Admin Delete Category
-app.delete('/api/admin/categories/:name', (req, res) => {
-  const db = readDatabase();
+app.delete('/api/admin/categories/:name', async (req, res) => {
+  const db = await getDatabase();
   const catName = decodeURIComponent(req.params.name).toLowerCase();
   db.categories = (db.categories || []).filter(c => c.name.toLowerCase() !== catName);
-  writeDatabase(db);
+  await writeDatabase(db);
   res.json({ success: true, message: 'Category deleted' });
 });
 

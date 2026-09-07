@@ -731,16 +731,27 @@
     }
 
     // Edit Prompt
-    function openEditModal(promptId) {
-      const p = allPrompts.find(item => item.id === promptId || String(item.numericId) === promptId);
+    async function openEditModal(promptId) {
+      let p = allPrompts.find(item => item.id === promptId || String(item.numericId) === promptId);
       if (!p) return;
 
+      // If masterPrompt is omitted from lightweight list, fetch full details
+      if (!p.masterPrompt) {
+        try {
+          const res = await fetch(`/api/prompts/${promptId}`);
+          const data = await res.json();
+          if (data.success && data.prompt) {
+            p = data.prompt;
+          }
+        } catch (e) {}
+      }
+
       document.getElementById('editPromptId').value = p.id;
-      document.getElementById('editTitle').value = p.title;
-      document.getElementById('editCategory').value = p.category;
-      document.getElementById('editType').value = p.type;
+      document.getElementById('editTitle').value = p.title || '';
+      document.getElementById('editCategory').value = p.category || '';
+      document.getElementById('editType').value = p.type || 'free';
       document.getElementById('editThumbnail').value = p.thumbnail || '';
-      document.getElementById('editMasterPrompt').value = p.masterPrompt;
+      document.getElementById('editMasterPrompt').value = p.masterPrompt || '';
 
       const editPreviewImg = document.getElementById('editThumbPreviewImg');
       const editPreviewBox = document.getElementById('editThumbPreviewBox');
