@@ -52,15 +52,14 @@
         <form onsubmit="handleAdminLogin(event)">
           <div class="form-group" style="text-align:left;">
             <label>USERNAME</label>
-            <input type="text" id="adminUser" class="form-control" placeholder="admin" value="admin" required>
+            <input type="text" id="adminUser" class="form-control" placeholder="Enter username" required autocomplete="username">
           </div>
           <div class="form-group" style="text-align:left;">
             <label>PASSWORD</label>
-            <input type="password" id="adminPass" class="form-control" placeholder="admin123" value="admin123" required>
+            <input type="password" id="adminPass" class="form-control" placeholder="••••••••" required autocomplete="current-password">
           </div>
           <button type="submit" class="btn btn-primary btn-block">Log In to Backend</button>
         </form>
-        <p style="font-size:12px;color:var(--muted);margin-top:16px;">Default credentials: <b>admin</b> / <b>admin123</b></p>
       </div>
     </div>
 
