@@ -12,7 +12,12 @@ $activePage = isset($activePage) ? $activePage : 'home';
   <title><?php echo htmlspecialchars($pageTitle); ?></title>
   <link rel="icon" type="image/png" href="favicon.png">
   <meta name="description" content="<?php echo htmlspecialchars($pageDesc); ?>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
+  <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="css/soni-style.css">
   <?php if (!empty($extraHead)) echo $extraHead; ?>

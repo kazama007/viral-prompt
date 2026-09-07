@@ -15,10 +15,12 @@ const {
 } = require('./lib/supabaseAuth');
 
 const app = express();
+const compression = require('compression');
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'data', 'database.json');
 
 // Middleware
+app.use(compression());
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
@@ -54,10 +56,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Static Folders (CSS, JS, images, uploads)
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Static Folders (CSS, JS, images, uploads) with caching
+const staticOpts = { maxAge: '7d', immutable: true };
+app.use(express.static(path.join(__dirname, 'public'), staticOpts));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), staticOpts));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), staticOpts));
 
 // Configure Multer for uploads (thumbnails & storyboard references)
 const storage = multer.diskStorage({
@@ -93,8 +96,30 @@ function getActiveDbPath() {
 // Database In-Memory Cache
 let cachedDb = null;
 let lastDbLoadTime = 0;
-const DB_CACHE_TTL = 20 * 1000; // 20 seconds TTL
+const DB_CACHE_TTL = 300 * 1000; // 5 minutes TTL for ultra-fast in-memory serving
 let currentSyncPromise = null;
+
+// Immediate local database reader (0-1ms instant bootstrap)
+function loadLocalDatabase() {
+  try {
+    const activePath = getActiveDbPath();
+    if (fs.existsSync(activePath)) {
+      const data = JSON.parse(fs.readFileSync(activePath, 'utf8'));
+      if (data && Array.isArray(data.prompts)) return data;
+    }
+    if (fs.existsSync(DB_FILE)) {
+      const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+      if (data && Array.isArray(data.prompts)) return data;
+    }
+  } catch (err) {
+    console.error('Error reading local disk database:', err);
+  }
+  return null;
+}
+
+// Pre-warm in-memory cache synchronously on boot so first request is 0ms
+cachedDb = loadLocalDatabase();
+if (cachedDb) lastDbLoadTime = Date.now();
 
 async function syncFromCloudStorage(force = false) {
   if (currentSyncPromise && !force) {
@@ -135,43 +160,38 @@ async function syncFromCloudStorage(force = false) {
   return currentSyncPromise;
 }
 
-// Initial background sync trigger on startup
+// Initial background sync trigger on startup (non-blocking)
 syncFromCloudStorage().catch(() => {});
 
-// Async Database Loader: Guarantees latest data from Cloud with in-memory caching & disk fallbacks
+// Async Database Loader: Fast in-memory serving + non-blocking background stale-while-revalidate
 async function getDatabase(forceReload = false) {
   const now = Date.now();
+
+  // 1. Fresh in-memory cache hit -> Instant return (<0.1ms)
   if (!forceReload && cachedDb && (now - lastDbLoadTime < DB_CACHE_TTL)) {
     return cachedDb;
   }
 
-  // Attempt fresh download from Supabase Storage
-  const cloudData = await syncFromCloudStorage(forceReload);
-  if (cloudData) {
-    return cloudData;
+  // 2. If memory cache empty, load local disk immediately (<1ms)
+  if (!cachedDb) {
+    cachedDb = loadLocalDatabase();
+    if (cachedDb) {
+      lastDbLoadTime = now;
+      syncFromCloudStorage().catch(() => {});
+      return cachedDb;
+    }
   }
 
-  // Fallback to in-memory cache if cloud download fails
-  if (cachedDb) {
+  // 3. Stale-while-revalidate: Return existing cache immediately, refresh in background
+  if (cachedDb && !forceReload) {
+    syncFromCloudStorage().catch(() => {});
     return cachedDb;
   }
 
-  // Fallback to disk
-  try {
-    const activePath = getActiveDbPath();
-    if (fs.existsSync(activePath)) {
-      cachedDb = JSON.parse(fs.readFileSync(activePath, 'utf8'));
-      lastDbLoadTime = now;
-      return cachedDb;
-    }
-    if (fs.existsSync(DB_FILE)) {
-      cachedDb = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-      lastDbLoadTime = now;
-      return cachedDb;
-    }
-  } catch (err) {
-    console.error('Error reading disk database:', err);
-  }
+  // 4. Force reload requested (e.g. from admin panel)
+  const cloudData = await syncFromCloudStorage(forceReload);
+  if (cloudData) return cloudData;
+  if (cachedDb) return cachedDb;
 
   cachedDb = { admin: { username: 'admin', password: 'Kazama#007' }, categories: [], prompts: [] };
   lastDbLoadTime = now;
@@ -505,8 +525,8 @@ app.get('/api/prompts', async (req, res) => {
     prompts = prompts.slice(numOffset, numOffset + numLimit);
   }
 
-  // Prevent stale caching so newly added prompts appear immediately on the front page
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  // Enable Edge CDN caching for 30s with 2-minute stale-while-revalidate
+  res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
 
   // Return full objects if explicitly requested (e.g. by admin exports)
   if (full === 'true') {

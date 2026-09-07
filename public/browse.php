@@ -161,9 +161,45 @@ include __DIR__ . '/includes/header.php';
       }
     }
 
+    function renderBrowseSkeletons() {
+      const grid = document.getElementById('browseGrid');
+      if (!grid) return;
+      grid.innerHTML = Array(6).fill(0).map(() => `
+        <div class="card" style="border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff;padding:0;">
+          <div class="sk-shimmer" style="width:100%;aspect-ratio:16/9;"></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <div class="sk-shimmer" style="height:18px;width:70%;border-radius:6px;"></div>
+            <div class="sk-shimmer" style="height:12px;width:40%;border-radius:4px;"></div>
+            <div class="sk-shimmer" style="height:36px;width:100%;border-radius:999px;margin-top:8px;"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
     async function fetchAndRenderPrompts() {
       const search = document.getElementById('browseSearchInput').value;
       const sort = document.getElementById('browseSortSelect').value;
+
+      const isDefault = activeType === 'all' && activeCategory === 'all' && !search && (sort === 'new' || !sort);
+
+      // Instant render from local cache if default view
+      if (isDefault && !allFetchedPrompts.length) {
+        try {
+          const cached = localStorage.getItem('pm_browse_prompts_v1');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length) {
+              allFetchedPrompts = parsed;
+              document.getElementById('browseSubTitle').textContent = `${allFetchedPrompts.length} prompts`;
+              renderGrid();
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!allFetchedPrompts.length) {
+        renderBrowseSkeletons();
+      }
 
       const query = new URLSearchParams({
         type: activeType,
@@ -175,11 +211,15 @@ include __DIR__ . '/includes/header.php';
       try {
         const res = await fetch(`/api/prompts?${query.toString()}`);
         const data = await res.json();
-        allFetchedPrompts = data.prompts || [];
-
-        document.getElementById('browseSubTitle').textContent = `${allFetchedPrompts.length} prompts`;
-        currentPage = 1;
-        renderGrid();
+        if (data && data.prompts) {
+          allFetchedPrompts = data.prompts;
+          document.getElementById('browseSubTitle').textContent = `${allFetchedPrompts.length} prompts`;
+          currentPage = 1;
+          renderGrid();
+          if (isDefault) {
+            try { localStorage.setItem('pm_browse_prompts_v1', JSON.stringify(data.prompts)); } catch (e) {}
+          }
+        }
       } catch (err) {
         console.error('Error loading prompts:', err);
       }

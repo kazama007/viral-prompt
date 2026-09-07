@@ -13,69 +13,69 @@ include __DIR__ . '/includes/header.php';
       <div class="marquee-track">
         <!-- Set 1 (User's prompt thumbnail boxes) -->
         <div class="marquee-card" onclick="window.location.href='/prompt?id=284'" title="30 Sec Ultra Viral Infrastructure Disaster">
-          <img src="assets/images/marquee/card_disaster.png" alt="Infrastructure Disaster" loading="eager">
+          <img src="assets/images/marquee/card_disaster.png" alt="Infrastructure Disaster" width="340" height="190" fetchpriority="high" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=283'" title="30 Sec Viral Ghost Baby Horror">
-          <img src="assets/images/marquee/card_ghost.png" alt="Ghost Baby Horror" loading="eager">
+          <img src="assets/images/marquee/card_ghost.png" alt="Ghost Baby Horror" width="340" height="190" fetchpriority="high" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=280'" title="30 Sec Viral Prison Reunion">
-          <img src="assets/images/marquee/card_prison.png" alt="Prison Reunion" loading="eager">
+          <img src="assets/images/marquee/card_prison.png" alt="Prison Reunion" width="340" height="190" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=285'" title="30 Sec Cosmic Space Journey">
-          <img src="assets/images/marquee/card_cosmic.png" alt="Cosmic Space Journey" loading="eager">
+          <img src="assets/images/marquee/card_cosmic.png" alt="Cosmic Space Journey" width="340" height="190" loading="eager">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=270'" title="30-Second Giant Beehive">
-          <img src="assets/images/marquee/card_5.png" alt="Giant Beehive" loading="eager">
+          <img src="assets/images/marquee/card_5.png" alt="Giant Beehive" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge is-free">🎁 Free</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=264'" title="Nano Banana Bulk Image Generation">
-          <img src="assets/images/marquee/card_7.png" alt="Nano Banana Bulk Generator" loading="eager">
+          <img src="assets/images/marquee/card_7.png" alt="Nano Banana Bulk Generator" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge is-free">🎁 Free</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=284'" title="Cyber Realism Video Engine">
-          <img src="assets/images/marquee/card_6.png" alt="Cyber Realism Engine" loading="eager">
+          <img src="assets/images/marquee/card_6.png" alt="Cyber Realism Engine" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=283'" title="High-Octane Cinematic Chase">
-          <img src="assets/images/marquee/card_8.png" alt="Cinematic Chase" loading="eager">
+          <img src="assets/images/marquee/card_8.png" alt="Cinematic Chase" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
 
         <!-- Set 2 (Seamless loop duplicate) -->
         <div class="marquee-card" onclick="window.location.href='/prompt?id=284'" title="30 Sec Ultra Viral Infrastructure Disaster">
-          <img src="assets/images/marquee/card_disaster.png" alt="Infrastructure Disaster" loading="eager">
+          <img src="assets/images/marquee/card_disaster.png" alt="Infrastructure Disaster" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=283'" title="30 Sec Viral Ghost Baby Horror">
-          <img src="assets/images/marquee/card_ghost.png" alt="Ghost Baby Horror" loading="eager">
+          <img src="assets/images/marquee/card_ghost.png" alt="Ghost Baby Horror" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=280'" title="30 Sec Viral Prison Reunion">
-          <img src="assets/images/marquee/card_prison.png" alt="Prison Reunion" loading="eager">
+          <img src="assets/images/marquee/card_prison.png" alt="Prison Reunion" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=285'" title="30 Sec Cosmic Space Journey">
-          <img src="assets/images/marquee/card_cosmic.png" alt="Cosmic Space Journey" loading="eager">
+          <img src="assets/images/marquee/card_cosmic.png" alt="Cosmic Space Journey" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=270'" title="30-Second Giant Beehive">
-          <img src="assets/images/marquee/card_5.png" alt="Giant Beehive" loading="eager">
+          <img src="assets/images/marquee/card_5.png" alt="Giant Beehive" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge is-free">🎁 Free</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=264'" title="Nano Banana Bulk Image Generation">
-          <img src="assets/images/marquee/card_7.png" alt="Nano Banana Bulk Generator" loading="eager">
+          <img src="assets/images/marquee/card_7.png" alt="Nano Banana Bulk Generator" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge is-free">🎁 Free</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=284'" title="Cyber Realism Video Engine">
-          <img src="assets/images/marquee/card_6.png" alt="Cyber Realism Engine" loading="eager">
+          <img src="assets/images/marquee/card_6.png" alt="Cyber Realism Engine" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
         <div class="marquee-card" onclick="window.location.href='/prompt?id=283'" title="High-Octane Cinematic Chase">
-          <img src="assets/images/marquee/card_8.png" alt="Cinematic Chase" loading="eager">
+          <img src="assets/images/marquee/card_8.png" alt="Cinematic Chase" width="340" height="190" loading="lazy" decoding="async">
           <span class="marquee-badge">🔒 Premium</span>
         </div>
       </div>
@@ -101,7 +101,8 @@ include __DIR__ . '/includes/header.php';
       <!-- Free Prompts Section -->
       <h2 class="plist-head">Free Prompts</h2>
       <div id="freeList">
-        <p style="color:var(--muted);text-align:center;padding:20px;">Loading free prompts from backend...</p>
+        <div class="sk-prow"><div class="sk-thumb sk-shimmer"></div><div class="sk-meta"><div class="sk-line-title sk-shimmer"></div><div class="sk-line-sub sk-shimmer"></div></div><div class="sk-btn-box sk-shimmer"></div></div>
+        <div class="sk-prow"><div class="sk-thumb sk-shimmer"></div><div class="sk-meta"><div class="sk-line-title sk-shimmer"></div><div class="sk-line-sub sk-shimmer"></div></div><div class="sk-btn-box sk-shimmer"></div></div>
       </div>
       <p style="text-align:center;margin:10px 0 30px;">
         <a href="/browse?type=free" class="btn btn-primary">Load More Free Prompts →</a>
@@ -110,7 +111,9 @@ include __DIR__ . '/includes/header.php';
       <!-- Premium Prompts Section -->
       <h2 class="plist-head">Premium Prompts</h2>
       <div id="premiumList">
-        <p style="color:var(--muted);text-align:center;padding:20px;">Loading premium prompts from backend...</p>
+        <div class="sk-prow"><div class="sk-thumb sk-shimmer"></div><div class="sk-meta"><div class="sk-line-title sk-shimmer"></div><div class="sk-line-sub sk-shimmer"></div></div><div class="sk-btn-box sk-shimmer"></div></div>
+        <div class="sk-prow"><div class="sk-thumb sk-shimmer"></div><div class="sk-meta"><div class="sk-line-title sk-shimmer"></div><div class="sk-line-sub sk-shimmer"></div></div><div class="sk-btn-box sk-shimmer"></div></div>
+        <div class="sk-prow"><div class="sk-thumb sk-shimmer"></div><div class="sk-meta"><div class="sk-line-title sk-shimmer"></div><div class="sk-line-sub sk-shimmer"></div></div><div class="sk-btn-box sk-shimmer"></div></div>
       </div>
       <p style="text-align:center;margin:10px 0 30px;">
         <a href="/browse?type=premium" class="btn btn-primary">Load More Prompts →</a>
@@ -184,11 +187,29 @@ include __DIR__ . '/includes/header.php';
     }
 
     async function loadPrompts() {
+      // 1. Instant zero-latency render from client cache
+      try {
+        const cached = localStorage.getItem('pm_home_prompts_v1');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length) {
+            allPromptsCache = parsed;
+            renderAllPrompts();
+          }
+        }
+      } catch (e) {}
+
+      // 2. Fetch latest prompts asynchronously without freezing UI
       try {
         const res = await fetch('/api/prompts?limit=30');
         const data = await res.json();
-        allPromptsCache = data.prompts || [];
-        renderAllPrompts();
+        if (data && data.prompts && data.prompts.length) {
+          allPromptsCache = data.prompts;
+          renderAllPrompts();
+          try {
+            localStorage.setItem('pm_home_prompts_v1', JSON.stringify(data.prompts));
+          } catch (e) {}
+        }
       } catch (err) {
         console.error('Failed to load prompts from backend:', err);
       }

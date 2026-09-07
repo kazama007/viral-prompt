@@ -29,11 +29,35 @@
     window.location.href = '/login';
   };
 
-  async function updateHeaderNav() {
+  function renderNav(currentUser) {
+    const nav = document.querySelector('.main-nav');
+    if (!nav) return;
+    const page = getActivePage();
+
+    if (currentUser) {
+      nav.innerHTML = `
+        <a href="/" class="${page === 'index' ? 'active' : ''}">Home</a>
+        <a href="/browse" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
+        <a href="/community" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
+        <a href="/account" class="${page === 'account' ? 'active' : ''}">My Account</a>
+        <a href="javascript:void(0)" onclick="userLogout()" class="nav-btn">Logout</a>
+      `;
+    } else {
+      nav.innerHTML = `
+        <a href="/" class="${page === 'index' ? 'active' : ''}">Home</a>
+        <a href="/browse" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
+        <a href="/community" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
+        <a href="/pricing" class="${page === 'pricing' ? 'active' : ''}">Join Community</a>
+        <a href="/login" class="${page === 'login' ? 'active' : ''}">Login</a>
+        <a href="/register" class="nav-btn">Get Started</a>
+      `;
+    }
+  }
+
+  function updateHeaderNav() {
     const nav = document.querySelector('.main-nav');
     if (!nav) return;
 
-    const page = getActivePage();
     const urlParams = new URLSearchParams(window.location.search);
     const urlToken = urlParams.get('token');
     if (urlToken) {
@@ -47,46 +71,34 @@
         const cached = localStorage.getItem('promptmaster_user');
         if (cached) currentUser = JSON.parse(cached);
       } catch (e) {}
-
-      try {
-        const res = await fetch('/api/auth/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.success && data.user) {
-            currentUser = data.user;
-            localStorage.setItem('promptmaster_user', JSON.stringify(currentUser));
-          }
-        } else if (res.status === 401 || res.status === 403) {
-          currentUser = null;
-          localStorage.removeItem('promptmaster_token');
-          localStorage.removeItem('promptmaster_user');
-        }
-      } catch (e) {
-        console.warn('Auth check error (preserving local session):', e);
-      }
     }
 
-    if (currentUser) {
-      // Subscribed / Logged In User Navigation
-      nav.innerHTML = `
-        <a href="/" class="${page === 'index' ? 'active' : ''}">Home</a>
-        <a href="/browse" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
-        <a href="/community" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
-        <a href="/account" class="${page === 'account' ? 'active' : ''}">My Account</a>
-        <a href="javascript:void(0)" onclick="userLogout()" class="nav-btn">Logout</a>
-      `;
-    } else {
-      // Guest / Logged Out Navigation
-      nav.innerHTML = `
-        <a href="/" class="${page === 'index' ? 'active' : ''}">Home</a>
-        <a href="/browse" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
-        <a href="/community" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
-        <a href="/pricing" class="${page === 'pricing' ? 'active' : ''}">Join Community</a>
-        <a href="/login" class="${page === 'login' ? 'active' : ''}">Login</a>
-        <a href="/register" class="nav-btn">Get Started</a>
-      `;
+    // Instant zero-latency render with cached user state
+    renderNav(currentUser);
+
+    // Verify token with backend in background without delaying user experience
+    if (token) {
+      fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => {
+          if (res.ok) return res.json();
+          if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem('promptmaster_token');
+            localStorage.removeItem('promptmaster_user');
+            renderNav(null);
+          }
+          return null;
+        })
+        .then(data => {
+          if (data && data.success && data.user) {
+            localStorage.setItem('promptmaster_user', JSON.stringify(data.user));
+            if (!currentUser) renderNav(data.user);
+          }
+        })
+        .catch(e => {
+          console.warn('Auth check error (preserving local session):', e);
+        });
     }
   }
 
