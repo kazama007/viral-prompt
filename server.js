@@ -470,6 +470,16 @@ app.get('/api/auth/me', async (req, res) => {
 
 // ─── API Routes ───
 
+// Edge CDN Image Delivery Helper: Serves lightweight WebP thumbnails from Cloudflare Edge cache
+function getFastCdnImageUrl(url, width = 640) {
+  if (!url || typeof url !== 'string') return url || '';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('https://raw.githubusercontent.com/')) {
+    return `https://wsrv.nl/?url=${encodeURIComponent(trimmed)}&w=${width}&output=webp&q=82`;
+  }
+  return trimmed;
+}
+
 // 1. Get Prompts (Optimized with lightweight card mapping, pagination, and Edge Cache)
 app.get('/api/prompts', async (req, res) => {
   const db = await getDatabase();
@@ -537,16 +547,6 @@ app.get('/api/prompts', async (req, res) => {
     });
   }
 
-  // Edge CDN Image Delivery Helper: Serves lightweight WebP thumbnails from Cloudflare Edge cache
-  function getFastCdnImageUrl(url, width = 640) {
-    if (!url || typeof url !== 'string') return url || '';
-    const trimmed = url.trim();
-    if (trimmed.startsWith('https://raw.githubusercontent.com/')) {
-      return `https://wsrv.nl/?url=${encodeURIComponent(trimmed)}&w=${width}&output=webp&q=82`;
-    }
-    return trimmed;
-  }
-
   // OPTIMIZATION: Omit heavy 5.6MB masterPrompt and negativePrompt from public list view.
   // Shrinks response payload by 98% (from 6.5MB to ~180KB, or ~28KB gzipped), making initial page load instant!
   const lightweightPrompts = prompts.map(p => {
@@ -574,6 +574,32 @@ app.get('/api/prompts', async (req, res) => {
     success: true,
     total,
     prompts: lightweightPrompts
+  });
+});
+
+// 1b. Get Full Marquee Thumbnail Pool (All prompts with thumbnails for dynamic randomized header ribbon)
+app.get('/api/prompts/marquee-pool', async (req, res) => {
+  const db = await getDatabase();
+  const validPrompts = (db.prompts || [])
+    .filter(p => p && p.thumbnail && typeof p.thumbnail === 'string' && p.thumbnail.trim())
+    .map(p => {
+      const rawThumb = p.thumbnail.trim();
+      return {
+        id: p.id,
+        numericId: p.numericId,
+        title: p.title || 'Viral AI Prompt',
+        type: p.type === 'free' ? 'free' : 'premium',
+        thumbnail: getFastCdnImageUrl(rawThumb, 680),
+        rawThumbnail: rawThumb
+      };
+    });
+
+  // Edge cache for 5 minutes with 20-minute stale-while-revalidate
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=1200');
+  res.json({
+    success: true,
+    total: validPrompts.length,
+    prompts: validPrompts
   });
 });
 

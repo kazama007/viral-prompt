@@ -10,7 +10,7 @@ include __DIR__ . '/includes/header.php';
   <main>
     <!-- Cover Prompts Marquee Track (Moving Continuously to the Right) -->
     <div class="cover-marquee-wrap" id="coverMarquee" title="Hover to pause • Click any prompt box">
-      <div class="marquee-track">
+      <div class="marquee-track" id="marqueeTrack">
         <!-- Set 1 (User's prompt thumbnail boxes) -->
         <div class="marquee-card" onclick="window.location.href='/prompt?id=284'" title="30 Sec Ultra Viral Infrastructure Disaster">
           <img src="assets/images/marquee/card_disaster.png" alt="Infrastructure Disaster" width="340" height="190" fetchpriority="high" loading="eager">
@@ -159,6 +159,88 @@ include __DIR__ . '/includes/header.php';
 
   <script>
     let activePromptData = null;
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Dynamic Header Marquee: Randomizes 10 prompt thumbnails on EVERY refresh from all available prompts
+    function renderMarqueeCards(selectedPrompts) {
+      const track = document.getElementById('marqueeTrack');
+      if (!track || !Array.isArray(selectedPrompts) || !selectedPrompts.length) return;
+
+      const makeCard = (p, isSet2) => {
+        const id = p.numericId || p.id;
+        const title = escapeHtml(p.title || 'Viral AI Video Prompt');
+        const thumb = p.thumbnail || p.rawThumbnail || '';
+        const raw = p.rawThumbnail || p.thumbnail || '';
+        const isFree = p.type === 'free';
+        const badgeClass = isFree ? 'marquee-badge is-free' : 'marquee-badge';
+        const badgeText = isFree ? '🎁 Free' : '🔒 Premium';
+
+        return `
+          <div class="marquee-card" onclick="window.location.href='/prompt?id=${id}'" title="${title}">
+            <img src="${thumb}" alt="${title}" width="340" height="190" ${isSet2 ? 'loading="lazy"' : 'loading="eager" fetchpriority="high"'} decoding="async" onerror="if(this.dataset.failed!=='1'){this.dataset.failed='1';this.src='${raw}';}">
+            <span class="${badgeClass}">${badgeText}</span>
+          </div>
+        `;
+      };
+
+      // Set 1 (10 cards) + Set 2 (10 duplicate cards) for seamless 50% infinite CSS marquee translation
+      const set1 = selectedPrompts.map(p => makeCard(p, false)).join('');
+      const set2 = selectedPrompts.map(p => makeCard(p, true)).join('');
+
+      track.innerHTML = set1 + set2;
+    }
+
+    function pickRandomPrompts(pool, count = 10) {
+      if (!Array.isArray(pool) || !pool.length) return [];
+      const shuffled = [...pool];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled.slice(0, Math.min(count, shuffled.length));
+    }
+
+    async function initMarqueeRandomizer() {
+      // 1. Instant zero-latency random shuffle on EVERY refresh from local pool
+      let pool = [];
+      try {
+        const cached = localStorage.getItem('pm_marquee_pool_v1');
+        if (cached) {
+          pool = JSON.parse(cached);
+          if (Array.isArray(pool) && pool.length >= 8) {
+            renderMarqueeCards(pickRandomPrompts(pool, 10));
+          }
+        }
+      } catch (e) {}
+
+      // 2. Fetch full marquee pool of all prompts from server in background
+      try {
+        const res = await fetch('/api/prompts/marquee-pool');
+        const data = await res.json();
+        if (data && Array.isArray(data.prompts) && data.prompts.length) {
+          try {
+            localStorage.setItem('pm_marquee_pool_v1', JSON.stringify(data.prompts));
+          } catch (e) {}
+          // If no local pool existed yet, render immediately
+          if (!pool || pool.length < 8) {
+            renderMarqueeCards(pickRandomPrompts(data.prompts, 10));
+          }
+        }
+      } catch (err) {
+        console.warn('Marquee pool fetch error:', err);
+      }
+    }
+
+    // Run marquee randomizer immediately as script parses
+    initMarqueeRandomizer();
 
     let slideIdx = 0;
     const slides = document.querySelectorAll('.cover-slide');
@@ -461,6 +543,7 @@ include __DIR__ . '/includes/header.php';
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      initMarqueeRandomizer();
       loadPrompts();
       checkUserAuth();
     });
