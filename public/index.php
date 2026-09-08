@@ -189,7 +189,7 @@ include __DIR__ . '/includes/header.php';
     async function loadPrompts() {
       // 1. Instant zero-latency render from client cache
       try {
-        const cached = localStorage.getItem('pm_home_prompts_v1');
+        const cached = localStorage.getItem('pm_home_prompts_v2');
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length) {
@@ -207,7 +207,7 @@ include __DIR__ . '/includes/header.php';
           allPromptsCache = data.prompts;
           renderAllPrompts();
           try {
-            localStorage.setItem('pm_home_prompts_v1', JSON.stringify(data.prompts));
+            localStorage.setItem('pm_home_prompts_v2', JSON.stringify(data.prompts));
           } catch (e) {}
         }
       } catch (err) {
@@ -227,10 +227,15 @@ include __DIR__ . '/includes/header.php';
         container.innerHTML = `<p style="color:var(--muted);text-align:center;padding:16px;">No free prompts available yet.</p>`;
         return;
       }
-      container.innerHTML = freeList.slice(0, 4).map(p => `
+      container.innerHTML = freeList.slice(0, 4).map((p, idx) => `
         <a class="prow" href="/prompt?id=${p.numericId || p.id}">
           <div class="prow-thumb">
-            <img src="${p.thumbnail}" alt="${p.title}" loading="lazy" decoding="async">
+            <img src="${p.thumbnail}"
+                 alt="${p.title}"
+                 ${idx < 2 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'}
+                 decoding="async"
+                 onerror="if(this.dataset.failed!=='1'){this.dataset.failed='1';this.src='${p.rawThumbnail || p.thumbnail}';}"
+                 onload="this.parentElement.classList.add('is-loaded')">
             <span class="prow-file-badge">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </span>
@@ -254,12 +259,15 @@ include __DIR__ . '/includes/header.php';
 
       const isVip = isUserVip();
 
-      container.innerHTML = premList.slice(0, 10).map(p => {
+      container.innerHTML = premList.slice(0, 10).map((p, idx) => {
+        const priorityAttr = idx < 2 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"';
+        const fallbackAttr = `onerror="if(this.dataset.failed!=='1'){this.dataset.failed='1';this.src='${p.rawThumbnail || p.thumbnail}';}" onload="this.parentElement.classList.add('is-loaded')"`;
+
         if (isVip) {
           return `
             <a class="prow" href="/prompt?id=${p.numericId || p.id}">
               <div class="prow-thumb">
-                <img src="${p.thumbnail}" alt="${p.title}" loading="lazy" decoding="async">
+                <img src="${p.thumbnail}" alt="${p.title}" ${priorityAttr} decoding="async" ${fallbackAttr}>
                 <span class="prow-file-badge">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 </span>
@@ -276,7 +284,7 @@ include __DIR__ . '/includes/header.php';
           return `
             <a class="prow" href="/prompt?id=${p.numericId || p.id}">
               <div class="prow-thumb">
-                <img src="${p.thumbnail}" alt="${p.title}" loading="lazy" decoding="async">
+                <img src="${p.thumbnail}" alt="${p.title}" ${priorityAttr} decoding="async" ${fallbackAttr}>
                 <span class="prow-file-badge is-locked">🔒</span>
               </div>
               <div class="prow-body">

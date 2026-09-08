@@ -185,7 +185,7 @@ include __DIR__ . '/includes/header.php';
       // Instant render from local cache if default view
       if (isDefault && !allFetchedPrompts.length) {
         try {
-          const cached = localStorage.getItem('pm_browse_prompts_v1');
+          const cached = localStorage.getItem('pm_browse_prompts_v2');
           if (cached) {
             const parsed = JSON.parse(cached);
             if (Array.isArray(parsed) && parsed.length) {
@@ -217,7 +217,7 @@ include __DIR__ . '/includes/header.php';
           currentPage = 1;
           renderGrid();
           if (isDefault) {
-            try { localStorage.setItem('pm_browse_prompts_v1', JSON.stringify(data.prompts)); } catch (e) {}
+            try { localStorage.setItem('pm_browse_prompts_v2', JSON.stringify(data.prompts)); } catch (e) {}
           }
         }
       } catch (err) {
@@ -287,7 +287,7 @@ include __DIR__ . '/includes/header.php';
           <div class="pcard ${!isUnlocked && p.type === 'premium' ? 'locked' : ''}">
             <div class="pcard-thumb">
               <a href="${detailUrl}" style="display:block;width:100%;height:100%;">
-                <img src="${thumbUrl}" alt="${p.title}" ${idx < 3 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" width="660" height="371">
+                <img src="${thumbUrl}" alt="${p.title}" ${idx < 3 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'} decoding="async" width="660" height="371" onerror="if(this.dataset.failed!=='1'){this.dataset.failed='1';this.src='${p.rawThumbnail || thumbUrl}';}" onload="this.closest('.pcard-thumb')?.classList.add('is-loaded')">
               </a>
               ${badgeHtml}
             </div>

@@ -446,14 +446,27 @@ a { color: var(--primary); text-decoration: none; }
   align-items: center;
   justify-content: center;
   position: relative;
-  background: #eae8f5;
+  background: linear-gradient(90deg, #ede9fe 0%, #f5f3ff 50%, #ede9fe 100%);
+  background-size: 200% 100%;
+  animation: prowThumbPulse 1.8s ease-in-out infinite;
   flex-shrink: 0;
+}
+
+.prow-thumb.is-loaded {
+  animation: none;
+  background: #181524;
+}
+
+@keyframes prowThumbPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .prow-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .prow-file-badge {
@@ -752,9 +765,16 @@ a { color: var(--primary); text-decoration: none; }
   width: 100%;
   position: relative;
   overflow: hidden;
-  background: #171524;
+  background: linear-gradient(90deg, #ede9fe 0%, #f5f3ff 50%, #ede9fe 100%);
+  background-size: 200% 100%;
+  animation: prowThumbPulse 1.8s ease-in-out infinite;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.pcard-thumb.is-loaded {
+  animation: none;
+  background: #171524;
 }
 
 .pcard-thumb img {

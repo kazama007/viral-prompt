@@ -537,23 +537,38 @@ app.get('/api/prompts', async (req, res) => {
     });
   }
 
+  // Edge CDN Image Delivery Helper: Serves lightweight WebP thumbnails from Cloudflare Edge cache
+  function getFastCdnImageUrl(url, width = 640) {
+    if (!url || typeof url !== 'string') return url || '';
+    const trimmed = url.trim();
+    if (trimmed.startsWith('https://raw.githubusercontent.com/')) {
+      return `https://wsrv.nl/?url=${encodeURIComponent(trimmed)}&w=${width}&output=webp&q=82`;
+    }
+    return trimmed;
+  }
+
   // OPTIMIZATION: Omit heavy 5.6MB masterPrompt and negativePrompt from public list view.
   // Shrinks response payload by 98% (from 6.5MB to ~180KB, or ~28KB gzipped), making initial page load instant!
-  const lightweightPrompts = prompts.map(p => ({
-    id: p.id,
-    numericId: p.numericId,
-    title: p.title,
-    category: p.category,
-    type: p.type,
-    promptCountBadge: p.promptCountBadge,
-    thumbnail: p.thumbnail,
-    storyboardImages: p.storyboardImages || [],
-    summary: p.summary,
-    views: p.views || 0,
-    likes: p.likes || 0,
-    updatedDate: p.updatedDate || p.updated || 'Recent',
-    tools: p.tools || []
-  }));
+  const lightweightPrompts = prompts.map(p => {
+    const rawThumb = p.thumbnail || '';
+    return {
+      id: p.id,
+      numericId: p.numericId,
+      title: p.title,
+      category: p.category,
+      type: p.type,
+      promptCountBadge: p.promptCountBadge,
+      thumbnail: getFastCdnImageUrl(rawThumb, 660),
+      rawThumbnail: rawThumb,
+      storyboardImages: (p.storyboardImages || []).map(img => getFastCdnImageUrl(img, 720)),
+      rawStoryboardImages: p.storyboardImages || [],
+      summary: p.summary,
+      views: p.views || 0,
+      likes: p.likes || 0,
+      updatedDate: p.updatedDate || p.updated || 'Recent',
+      tools: p.tools || []
+    };
+  });
 
   res.json({
     success: true,
@@ -614,10 +629,27 @@ app.get('/api/prompts/:id', async (req, res) => {
     res.setHeader('Cache-Control', 'private, no-cache');
   }
 
+  const rawThumb = prompt.thumbnail || '';
+  const fastThumb = rawThumb.startsWith('https://raw.githubusercontent.com/')
+    ? `https://wsrv.nl/?url=${encodeURIComponent(rawThumb.trim())}&w=800&output=webp&q=82`
+    : rawThumb;
+
+  const rawStoryboards = Array.isArray(prompt.storyboardImages) ? prompt.storyboardImages : [];
+  const fastStoryboards = rawStoryboards.map(img => {
+    if (typeof img === 'string' && img.trim().startsWith('https://raw.githubusercontent.com/')) {
+      return `https://wsrv.nl/?url=${encodeURIComponent(img.trim())}&w=1280&output=webp&q=85`;
+    }
+    return img;
+  });
+
   res.json({
     success: true,
     prompt: {
       ...prompt,
+      thumbnail: fastThumb,
+      rawThumbnail: rawThumb,
+      storyboardImages: fastStoryboards,
+      rawStoryboardImages: rawStoryboards,
       // If unlocked, deliver full master prompt & negative prompt; otherwise keep protected
       masterPrompt: isUnlocked ? prompt.masterPrompt : null,
       negativePrompt: isUnlocked ? prompt.negativePrompt : null,
