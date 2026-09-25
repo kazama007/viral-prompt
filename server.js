@@ -265,23 +265,40 @@ async function writeDatabase(db) {
     }
   }
 
-  // 2. CRITICAL: Await cloud sync to Supabase Storage so Vercel does not terminate lambda before upload finishes
-  try {
-    const { supabase } = require('./lib/supabase');
-    if (supabase) {
-      const { error } = await supabase.storage.from('prompts').upload('database.json', Buffer.from(jsonStr), {
-        contentType: 'application/json',
-        upsert: true,
-        cacheControl: '0'
-      });
-      if (error) {
-        console.error('[Supabase Storage Sync Error]:', error.message);
-      } else {
-        console.log(`[Supabase Storage Sync] database.json (${db.prompts?.length || 0} prompts) updated successfully in cloud`);
+  // 2. CRITICAL: Await cloud sync to Supabase Storage with retry logic so Vercel persists data permanently
+  const { supabase } = require('./lib/supabase');
+  if (supabase) {
+    const fileBuffer = Buffer.from(jsonStr);
+    let uploadSuccess = false;
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const { error } = await supabase.storage.from('prompts').upload('database.json', fileBuffer, {
+          contentType: 'application/json',
+          upsert: true,
+          cacheControl: '0'
+        });
+        if (!error) {
+          uploadSuccess = true;
+          console.log(`[Supabase Storage Sync] database.json (${db.prompts?.length || 0} prompts) updated successfully on attempt ${attempt}`);
+          break;
+        }
+        lastError = error;
+        console.warn(`[Supabase Storage Sync Attempt ${attempt} failed]:`, error.message);
+      } catch (uploadErr) {
+        lastError = uploadErr;
+        console.warn(`[Supabase Storage Sync Attempt ${attempt} exception]:`, uploadErr.message);
+      }
+      if (attempt < 3) {
+        await new Promise(r => setTimeout(r, 800 * attempt));
       }
     }
-  } catch (err) {
-    console.error('[Cloud Write Trigger Error]:', err.message);
+
+    if (!uploadSuccess && lastError) {
+      console.error('[Supabase Storage Sync Fatal]: Failed to upload to cloud storage:', lastError.message);
+      throw new Error('Database cloud sync failed: ' + lastError.message);
+    }
   }
 
   return true;
@@ -545,7 +562,8 @@ function getFastCdnImageUrl(url, width = 640) {
 
 // 1. Get Prompts (Optimized with lightweight card mapping, pagination, and Edge Cache)
 app.get('/api/prompts', async (req, res) => {
-  const db = await getDatabase();
+  const isAdminReq = req.query.admin === 'true' || Boolean(req.headers.authorization);
+  const db = await getDatabase(isAdminReq);
   let prompts = db.prompts || [];
 
   const { category, type, search, sort, limit, offset, full } = req.query;
@@ -598,8 +616,12 @@ app.get('/api/prompts', async (req, res) => {
     prompts = prompts.slice(numOffset, numOffset + numLimit);
   }
 
-  // Enable Edge CDN caching for 30s with 2-minute stale-while-revalidate
-  res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
+  // Disable Edge CDN caching for admin requests or explicit cache-bust, keep short TTL for public
+  if (isAdminReq || req.query.t) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  } else {
+    res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=30');
+  }
 
   // Return full objects if explicitly requested (e.g. by admin exports)
   if (full === 'true') {
@@ -1324,7 +1346,8 @@ app.get('/api/admin/prompts/:id', requireAdminAuth, async (req, res) => {
 
 // 6. Admin Add New Prompt
 app.post('/api/admin/prompts', requireAdminAuth, async (req, res) => {
-  const db = await getDatabase();
+  try {
+    const db = await getDatabase(true);
   const {
     title,
     category,
@@ -1385,12 +1408,17 @@ app.post('/api/admin/prompts', requireAdminAuth, async (req, res) => {
   }
 
   await writeDatabase(db);
-  res.json({ success: true, message: 'Prompt added successfully', prompt: newPrompt });
+    res.json({ success: true, message: 'Prompt added successfully', prompt: newPrompt });
+  } catch (err) {
+    console.error('[Admin Add Prompt Error]:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to add prompt: ' + err.message });
+  }
 });
 
 // 7. Admin Edit Existing Prompt
 app.put('/api/admin/prompts/:id', requireAdminAuth, async (req, res) => {
-  const db = await getDatabase();
+  try {
+    const db = await getDatabase(true);
   const index = (db.prompts || []).findIndex(p => p.id === req.params.id || String(p.numericId) === req.params.id);
 
   if (index === -1) {
@@ -1440,12 +1468,17 @@ app.put('/api/admin/prompts/:id', requireAdminAuth, async (req, res) => {
   };
 
   await writeDatabase(db);
-  res.json({ success: true, message: 'Prompt updated successfully', prompt: db.prompts[index] });
+    res.json({ success: true, message: 'Prompt updated successfully', prompt: db.prompts[index] });
+  } catch (err) {
+    console.error('[Admin Edit Prompt Error]:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to update prompt: ' + err.message });
+  }
 });
 
 // 8. Admin Delete Prompt
 app.delete('/api/admin/prompts/:id', requireAdminAuth, async (req, res) => {
-  const db = await getDatabase();
+  try {
+    const db = await getDatabase(true);
   const initialLength = (db.prompts || []).length;
   db.prompts = (db.prompts || []).filter(p => p.id !== req.params.id && String(p.numericId) !== req.params.id);
 
@@ -1454,12 +1487,16 @@ app.delete('/api/admin/prompts/:id', requireAdminAuth, async (req, res) => {
   }
 
   await writeDatabase(db);
-  res.json({ success: true, message: 'Prompt deleted successfully' });
+    res.json({ success: true, message: 'Prompt deleted successfully' });
+  } catch (err) {
+    console.error('[Admin Delete Prompt Error]:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to delete prompt: ' + err.message });
+  }
 });
 
 // 9. Admin Add New Category
 app.post('/api/admin/categories', requireAdminAuth, async (req, res) => {
-  const db = await getDatabase();
+  const db = await getDatabase(true);
   const { name } = req.body;
   if (!name || !name.trim()) {
     return res.status(400).json({ success: false, message: 'Category name is required' });
@@ -1480,7 +1517,7 @@ app.post('/api/admin/categories', requireAdminAuth, async (req, res) => {
 
 // 10. Admin Delete Category
 app.delete('/api/admin/categories/:name', requireAdminAuth, async (req, res) => {
-  const db = await getDatabase();
+  const db = await getDatabase(true);
   const catName = decodeURIComponent(req.params.name).toLowerCase();
   db.categories = (db.categories || []).filter(c => c.name.toLowerCase() !== catName);
   await writeDatabase(db);

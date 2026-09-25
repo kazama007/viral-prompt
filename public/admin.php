@@ -475,9 +475,10 @@
     // Load Data
     async function loadAdminData() {
       try {
+        const bust = 'admin=true&t=' + Date.now();
         const [promptsRes, catsRes] = await Promise.all([
-          fetch('/api/prompts'),
-          fetch('/api/categories')
+          fetch('/api/prompts?' + bust, { cache: 'no-store' }),
+          fetch('/api/categories?' + bust, { cache: 'no-store' })
         ]);
         const promptsData = await promptsRes.json();
         const catsData = await catsRes.json();
@@ -673,19 +674,46 @@
     // Publish Prompt
     async function handlePublishPrompt(e) {
       e.preventDefault();
+
+      const uploadingIco = document.getElementById('pStoryboardUploading');
+      if (uploadingIco && uploadingIco.style.display !== 'none') {
+        alert('Please wait for image upload to finish before publishing.');
+        return;
+      }
+
+      const title = document.getElementById('pTitle').value.trim();
+      const category = document.getElementById('pCategory').value.trim();
+      const masterPrompt = document.getElementById('pMasterPrompt').value.trim();
+
+      if (!title) {
+        alert('Please enter a Prompt Title.');
+        document.getElementById('pTitle').focus();
+        return;
+      }
+      if (!category) {
+        alert('Please select or enter a Category.');
+        document.getElementById('pCategory').focus();
+        return;
+      }
+      if (!masterPrompt) {
+        alert('Please enter the Master System Prompt.');
+        document.getElementById('pMasterPrompt').focus();
+        return;
+      }
+
       const btn = document.getElementById('publishSubmitBtn');
       btn.disabled = true;
-      btn.textContent = 'Publishing...';
+      btn.textContent = 'Publishing & Syncing to Cloud...';
 
       const promptData = {
-        title: document.getElementById('pTitle').value,
-        category: document.getElementById('pCategory').value,
+        title,
+        category,
         type: document.getElementById('pType').value,
-        thumbnail: document.getElementById('pThumbUrl').value || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
+        thumbnail: document.getElementById('pThumbUrl').value.trim() || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
         storyboardImages: publishStoryboardImages,
-        summary: document.getElementById('pSummary').value,
-        masterPrompt: document.getElementById('pMasterPrompt').value,
-        tools: document.getElementById('pTools').value.split(',').map(s => s.trim())
+        summary: document.getElementById('pSummary').value.trim(),
+        masterPrompt,
+        tools: document.getElementById('pTools').value.split(',').map(s => s.trim()).filter(Boolean)
       };
 
       try {
@@ -696,15 +724,24 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert('✅ Prompt published successfully! It is now live on the website.');
+          // Immediately inject newly published prompt into local table state
+          if (data.prompt) {
+            allPrompts = [data.prompt, ...allPrompts.filter(p => String(p.id) !== String(data.prompt.id))];
+            updateStats();
+            renderPromptsTable();
+          }
+
           document.getElementById('publishForm').reset();
           document.getElementById('thumbPreviewBox').style.display = 'none';
           publishStoryboardImages = [];
           renderStoryboardGallery('publish');
-          loadAdminData();
+
+          alert('✅ Prompt published successfully! It is now live on the website (ID #' + (data.prompt?.numericId || data.prompt?.id || '') + ').');
+
+          await loadAdminData();
           switchAdminTab('manage');
         } else {
-          alert('Error: ' + data.message);
+          alert('Error: ' + (data.message || 'Failed to publish prompt'));
         }
       } catch(err) {
         alert('Could not save prompt: ' + err.message);
