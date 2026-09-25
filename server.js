@@ -506,7 +506,20 @@ app.get('/api/auth/me', async (req, res) => {
     const cleanEmail = (user.email || '').toLowerCase().trim();
     const isAdmin = cleanEmail === ADMIN_EMAIL;
     user.isAdmin = isAdmin;
-    if (isAdmin) user.role = 'admin';
+    if (isAdmin) {
+      user.role = 'admin';
+      user.subscription = {
+        status: 'active',
+        plan: 'admin_lifetime',
+        isActive: true,
+        isExpired: false,
+        expiresAt: null,
+        durationDays: 99999,
+        daysLeft: 99999,
+        expiresAtFormatted: 'Lifetime / Never Expires',
+        grantedAtFormatted: user.createdAtFormatted || '6 Sep 2026'
+      };
+    }
 
     res.json({
       success: true,

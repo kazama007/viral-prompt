@@ -182,7 +182,34 @@ include __DIR__ . '/includes/header.php';
           countdownTimer = setInterval(updateTimer, 1000);
         }
 
-        if (isVip) {
+        const isAdmin = Boolean(user.isAdmin || (user.email && user.email.toLowerCase().trim() === 'sa812sn@gmail.com'));
+
+        if (isAdmin) {
+          // Administrator Presentation: Lifetime Full Access, No Expiry Countdown
+          badge.className = 'badge';
+          badge.style.cssText = 'background:linear-gradient(135deg, #6366f1, #8b5cf6);color:#fff;font-weight:700;padding:5px 14px;border-radius:999px;font-size:13px;';
+          badge.innerHTML = '👑 Administrator';
+
+          const planTag = document.getElementById('accPlanTag');
+          planTag.textContent = 'Lifetime Full Access';
+          planTag.style.cssText = 'font-size:12.5px;font-weight:700;color:#6366f1;background:#ede9fe;padding:4px 14px;border-radius:999px;';
+
+          // Completely hide subscription countdown box for Admin
+          document.getElementById('timeRemainingBox').style.display = 'none';
+
+          validRow.innerHTML = `<strong>Account Access:</strong> <span style="color:#16a34a;font-weight:700;">Lifetime Unlimited (Owner / Admin)</span>`;
+          document.getElementById('accActivated').textContent = user.subscription?.grantedAtFormatted || user.createdAtFormatted || '6 Sep 2026';
+          document.getElementById('accActivatedRow').style.display = 'block';
+
+          btnGroup.innerHTML = `
+            <a href="/admin" class="btn btn-primary" style="background:linear-gradient(135deg, #6366f1, #8b5cf6);border:none;font-weight:700;padding:12px 26px;display:inline-flex;align-items:center;gap:8px;border-radius:999px;box-shadow:0 4px 14px rgba(99,102,241,0.35);">
+              ⚙️ Open Admin Panel
+            </a>
+            <a href="/browse" class="btn btn-outline" style="border-radius:999px;padding:12px 24px;font-weight:600;">
+              Browse Prompts
+            </a>
+          `;
+        } else if (isVip) {
           badge.className = 'badge badge-active';
           badge.textContent = 'Active';
           document.getElementById('accPlanTag').textContent = 'VIP Access — $2.5/mo';
@@ -212,16 +239,10 @@ include __DIR__ . '/includes/header.php';
             validRow.innerHTML = `<strong>Status:</strong> No active subscription`;
           }
           document.getElementById('accActivatedRow').style.display = 'none';
-        }
-
-        const isAdmin = Boolean(user.isAdmin || (user.email && user.email.toLowerCase().trim() === 'sa812sn@gmail.com'));
-        if (isAdmin) {
-          const adminBtn = document.createElement('a');
-          adminBtn.href = '/admin';
-          adminBtn.className = 'btn btn-outline';
-          adminBtn.style.cssText = 'border-color:#6366f1;color:#6366f1;font-weight:700;display:inline-flex;align-items:center;gap:6px;';
-          adminBtn.innerHTML = '⚙️ Open Admin Panel';
-          btnGroup.appendChild(adminBtn);
+          btnGroup.innerHTML = `
+            <a href="https://wa.me/919410610800?text=Hi%21+I+want+to+activate+VIP+subscription+on+VIRAL+PROMPT+for+2.5+dollars" target="_blank" rel="noopener" class="btn btn-primary" style="background:#25D366;border-color:#25D366;">Activate VIP on WhatsApp ($2.5/mo)</a>
+            <a href="/browse" class="btn btn-outline" style="margin-left:8px;">Browse Free Prompts</a>
+          `;
         }
 
         document.getElementById('membershipLoading').style.display = 'none';
