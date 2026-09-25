@@ -55,10 +55,14 @@ include __DIR__ . '/includes/header.php';
         if (data.success) {
           localStorage.setItem('promptmaster_token', data.token);
           localStorage.setItem('promptmaster_user', JSON.stringify(data.user));
+          const isAdmin = Boolean(data.user && (data.user.isAdmin || data.user.email?.toLowerCase().trim() === 'sa812sn@gmail.com'));
+          if (isAdmin) {
+            localStorage.setItem('promptmaster_admin_token', data.token);
+          }
           alertBox.style.background = '#e6f9ed';
           alertBox.style.color = '#128c46';
           alertBox.style.border = '1px solid #b7ecc8';
-          alertBox.innerHTML = '✅ Welcome back, ' + data.user.name + '! Redirecting...';
+          alertBox.innerHTML = '✅ Welcome back, ' + data.user.name + (isAdmin ? ' (Administrator)' : '') + '! Redirecting...';
           alertBox.style.display = 'block';
           let nextUrl = new URLSearchParams(window.location.search).get('next') || '/';
           if (nextUrl === 'index.php' || nextUrl === '/index.php') nextUrl = '/';

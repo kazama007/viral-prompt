@@ -17,6 +17,7 @@
     if (path.includes('login')) return 'login';
     if (path.includes('register')) return 'register';
     if (path.includes('prompt')) return 'prompt';
+    if (path.includes('admin')) return 'admin';
     if (path === '/' || path.endsWith('/index') || path.endsWith('index.html') || path.endsWith('index.php')) return 'index';
     return '';
   }
@@ -24,6 +25,7 @@
   window.userLogout = function () {
     localStorage.removeItem('promptmaster_token');
     localStorage.removeItem('promptmaster_user');
+    localStorage.removeItem('promptmaster_admin_token');
     localStorage.removeItem('vip_token');
     localStorage.removeItem('isVip');
     window.location.href = '/login';
@@ -35,10 +37,12 @@
     const page = getActivePage();
 
     if (currentUser) {
+      const isAdmin = Boolean(currentUser.isAdmin || (currentUser.email && currentUser.email.toLowerCase().trim() === 'sa812sn@gmail.com'));
       nav.innerHTML = `
         <a href="/" class="${page === 'index' ? 'active' : ''}">Home</a>
         <a href="/browse" class="${page === 'browse' ? 'active' : ''}">All Prompts</a>
         <a href="/community" class="${page === 'community' ? 'active' : ''}">Social Corner</a>
+        ${isAdmin ? `<a href="/admin" class="${page === 'admin' ? 'active' : ''}" style="color:#6366f1;font-weight:700;">⚙️ Admin Panel</a>` : ''}
         <a href="/account" class="${page === 'account' ? 'active' : ''}">My Account</a>
         <a href="javascript:void(0)" onclick="userLogout()" class="nav-btn">Logout</a>
       `;

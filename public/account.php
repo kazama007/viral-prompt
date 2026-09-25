@@ -212,10 +212,16 @@ include __DIR__ . '/includes/header.php';
             validRow.innerHTML = `<strong>Status:</strong> No active subscription`;
           }
           document.getElementById('accActivatedRow').style.display = 'none';
-          btnGroup.innerHTML = `
-            <a href="https://wa.me/919410610800?text=Hi%21+I+want+to+activate+VIP+subscription+on+VIRAL+PROMPT+for+2.5+dollars" target="_blank" rel="noopener" class="btn btn-primary" style="background:#25D366;border-color:#25D366;">Activate VIP on WhatsApp ($2.5/mo)</a>
-            <a href="/browse" class="btn btn-outline" style="margin-left:8px;">Browse Free Prompts</a>
-          `;
+        }
+
+        const isAdmin = Boolean(user.isAdmin || (user.email && user.email.toLowerCase().trim() === 'sa812sn@gmail.com'));
+        if (isAdmin) {
+          const adminBtn = document.createElement('a');
+          adminBtn.href = '/admin';
+          adminBtn.className = 'btn btn-outline';
+          adminBtn.style.cssText = 'border-color:#6366f1;color:#6366f1;font-weight:700;display:inline-flex;align-items:center;gap:6px;';
+          adminBtn.innerHTML = '⚙️ Open Admin Panel';
+          btnGroup.appendChild(adminBtn);
         }
 
         document.getElementById('membershipLoading').style.display = 'none';

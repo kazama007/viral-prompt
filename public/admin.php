@@ -24,6 +24,26 @@
       padding: 12px 10px !important;
     }
   </style>
+  <script>
+    // Immediate synchronous access guard: Only sa812sn@gmail.com can view
+    (function () {
+      try {
+        var token = localStorage.getItem('promptmaster_token') || localStorage.getItem('promptmaster_admin_token');
+        var userStr = localStorage.getItem('promptmaster_user');
+        if (!token || !userStr) {
+          window.location.replace('/login?next=' + encodeURIComponent(window.location.pathname + window.location.search));
+          return;
+        }
+        var user = JSON.parse(userStr);
+        if (!user || !user.email || user.email.toLowerCase().trim() !== 'sa812sn@gmail.com') {
+          window.location.replace('/');
+          return;
+        }
+      } catch (e) {
+        window.location.replace('/');
+      }
+    })();
+  </script>
 </head>
 <body style="background:#f4f3f9;">
 
@@ -42,25 +62,11 @@
 
   <main class="container admin-container" style="padding-top: 30px; padding-bottom: 60px;">
 
-    <!-- 1. Login Gate -->
-    <div id="loginGate" style="max-width: 420px; margin: 40px auto;">
-      <div class="admin-card" style="text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
-        <h2 style="margin-bottom: 8px;">Admin Login</h2>
-        <p style="color:var(--muted);font-size:14px;margin-bottom:24px;">Login to publish daily category-wise prompts</p>
-
-        <form onsubmit="handleAdminLogin(event)">
-          <div class="form-group" style="text-align:left;">
-            <label>USERNAME</label>
-            <input type="text" id="adminUser" class="form-control" placeholder="Enter username" required autocomplete="username">
-          </div>
-          <div class="form-group" style="text-align:left;">
-            <label>PASSWORD</label>
-            <input type="password" id="adminPass" class="form-control" placeholder="••••••••" required autocomplete="current-password">
-          </div>
-          <button type="submit" class="btn btn-primary btn-block">Log In to Backend</button>
-        </form>
-      </div>
+    <!-- 1. Verification Gate -->
+    <div id="adminCheckingAuth" style="text-align: center; padding: 70px 20px;">
+      <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
+      <h3 style="margin-bottom: 8px;">Verifying Administrator Access...</h3>
+      <p style="color:var(--muted);font-size:14px;">Authorized exclusively for sa812sn@gmail.com</p>
     </div>
 
     <!-- 2. Admin Main Dashboard -->
@@ -388,54 +394,82 @@
     let allCategories = [];
     let allUsers = [];
 
-    // Authentication
-    function checkAuth() {
+    // Intercept fetch to automatically supply Bearer token to all admin API calls
+    const _origFetch = window.fetch;
+    window.fetch = function(url, options) {
+      options = options || {};
+      if (typeof url === 'string' && (url.startsWith('/api/admin') || url.startsWith('/api/prompts'))) {
+        options.headers = options.headers || {};
+        const token = localStorage.getItem('promptmaster_token') || localStorage.getItem('promptmaster_admin_token');
+        if (token) {
+          if (options.headers instanceof Headers) {
+            if (!options.headers.has('Authorization')) options.headers.set('Authorization', `Bearer ${token}`);
+          } else {
+            if (!options.headers['Authorization']) options.headers['Authorization'] = `Bearer ${token}`;
+          }
+        }
+      }
+      return _origFetch(url, options);
+    };
+
+    // Authentication verification
+    async function checkAuth() {
       const urlParams = new URLSearchParams(window.location.search);
       const urlToken = urlParams.get('token');
       if (urlToken) {
+        localStorage.setItem('promptmaster_token', urlToken);
         localStorage.setItem('promptmaster_admin_token', urlToken);
       }
-      const token = localStorage.getItem('promptmaster_admin_token');
-      if (token) {
-        document.getElementById('loginGate').style.display = 'none';
+      const token = localStorage.getItem('promptmaster_token') || localStorage.getItem('promptmaster_admin_token');
+      if (!token) {
+        window.location.replace('/login?next=' + encodeURIComponent(window.location.pathname + window.location.search));
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const email = (data.user?.email || '').toLowerCase().trim();
+        if (!res.ok || !data.success || email !== 'sa812sn@gmail.com') {
+          alert('Access Denied: Only sa812sn@gmail.com is authorized to access the admin panel.');
+          window.location.replace('/');
+          return;
+        }
+
+        // Successfully verified as sa812sn@gmail.com
+        localStorage.setItem('promptmaster_user', JSON.stringify(data.user));
+        localStorage.setItem('promptmaster_admin_token', token);
+
+        const checkEl = document.getElementById('adminCheckingAuth');
+        if (checkEl) checkEl.style.display = 'none';
         document.getElementById('adminDashboard').style.display = 'block';
         document.getElementById('logoutBtn').style.display = 'inline-block';
         loadAdminData();
         const tab = urlParams.get('tab');
         if (tab) switchAdminTab(tab);
-      } else {
-        document.getElementById('loginGate').style.display = 'block';
-        document.getElementById('adminDashboard').style.display = 'none';
-        document.getElementById('logoutBtn').style.display = 'none';
-      }
-    }
-
-    async function handleAdminLogin(e) {
-      e.preventDefault();
-      const username = document.getElementById('adminUser').value;
-      const password = document.getElementById('adminPass').value;
-
-      try {
-        const res = await fetch('/api/admin/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (data.success) {
-          localStorage.setItem('promptmaster_admin_token', data.token);
-          checkAuth();
+      } catch (err) {
+        console.error('Admin verification error:', err);
+        const cached = JSON.parse(localStorage.getItem('promptmaster_user') || '{}');
+        if ((cached.email || '').toLowerCase().trim() === 'sa812sn@gmail.com') {
+          const checkEl = document.getElementById('adminCheckingAuth');
+          if (checkEl) checkEl.style.display = 'none';
+          document.getElementById('adminDashboard').style.display = 'block';
+          document.getElementById('logoutBtn').style.display = 'inline-block';
+          loadAdminData();
         } else {
-          alert('Login failed: ' + data.message);
+          window.location.replace('/');
         }
-      } catch(err) {
-        alert('Could not connect to server: ' + err.message);
       }
     }
 
     function adminLogout() {
+      localStorage.removeItem('promptmaster_token');
+      localStorage.removeItem('promptmaster_user');
       localStorage.removeItem('promptmaster_admin_token');
-      checkAuth();
+      localStorage.removeItem('vip_token');
+      window.location.replace('/login');
     }
 
     // Load Data

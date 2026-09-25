@@ -18,6 +18,7 @@ const app = express();
 const compression = require('compression');
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'data', 'database.json');
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'sa812sn@gmail.com').toLowerCase().trim();
 
 // Middleware
 app.use(compression());
@@ -422,16 +423,23 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// Login User (Cloud Stored)
+// Login User (Cloud Stored + Local Fallback)
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
 
+  const cleanEmail = email.trim().toLowerCase();
+
   try {
     const result = await loginCloudUser(email, password);
-    res.json({
+    const isAdmin = (result.user?.email || cleanEmail).toLowerCase().trim() === ADMIN_EMAIL;
+    if (isAdmin) {
+      result.user.isAdmin = true;
+      result.user.role = 'admin';
+    }
+    return res.json({
       success: true,
       message: 'Logged in successfully',
       token: result.token,
@@ -439,6 +447,29 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (err) {
     console.error('[Cloud Login Error]:', err.message);
+    // Local DB Fallback
+    try {
+      const db = await getDatabase();
+      const localUser = (db.users || []).find(u => u.email && u.email.trim().toLowerCase() === cleanEmail);
+      if (localUser && localUser.password && (localUser.password === password || localUser.password.toLowerCase() === password.toLowerCase())) {
+        const isAdmin = cleanEmail === ADMIN_EMAIL;
+        const formattedUser = {
+          id: localUser.id,
+          name: localUser.name || 'Member',
+          email: localUser.email,
+          subscription: localUser.subscription || { status: 'active', plan: 'vip', isActive: true },
+          isAdmin,
+          role: isAdmin ? 'admin' : 'user'
+        };
+        const token = Buffer.from(`${localUser.id}:::${Date.now()}`).toString('base64');
+        return res.json({
+          success: true,
+          message: 'Logged in successfully',
+          token,
+          user: formattedUser
+        });
+      }
+    } catch (localErr) {}
     res.status(401).json({ success: false, message: 'Invalid email or password' });
   }
 });
@@ -453,10 +484,29 @@ app.get('/api/auth/me', async (req, res) => {
   }
 
   try {
-    const user = await getCloudUserProfile(token);
+    let user = await getCloudUserProfile(token);
+    if (!user) {
+      const db = await getDatabase();
+      const userId = getUserIdFromToken(token);
+      let localUser = (db.users || []).find(u => u.id === userId || u.id === token || u.email.toLowerCase() === token.toLowerCase());
+      if (localUser) {
+        user = {
+          id: localUser.id,
+          name: localUser.name || 'Member',
+          email: localUser.email,
+          subscription: localUser.subscription || { status: 'active', plan: 'vip', isActive: true }
+        };
+      }
+    }
+
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found or session expired' });
     }
+
+    const cleanEmail = (user.email || '').toLowerCase().trim();
+    const isAdmin = cleanEmail === ADMIN_EMAIL;
+    user.isAdmin = isAdmin;
+    if (isAdmin) user.role = 'admin';
 
     res.json({
       success: true,
@@ -617,7 +667,7 @@ app.get('/api/prompts/:id', async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '').trim() || (req.query.token ? req.query.token.trim() : '');
   if (token) {
-    if (token === 'admin-auth-token-valid' || token.startsWith('admin-')) {
+    if (token === 'admin-auth-token-valid') {
       isLoggedIn = true;
       isVip = true;
     } else {
@@ -625,7 +675,7 @@ app.get('/api/prompts/:id', async (req, res) => {
         const cloudUser = await getCloudUserProfile(token);
         if (cloudUser) {
           isLoggedIn = true;
-          if (cloudUser.subscription && cloudUser.subscription.isActive) {
+          if ((cloudUser.email && cloudUser.email.toLowerCase().trim() === ADMIN_EMAIL) || (cloudUser.subscription && cloudUser.subscription.isActive)) {
             isVip = true;
           }
         }
@@ -642,7 +692,7 @@ app.get('/api/prompts/:id', async (req, res) => {
         if (user) {
           isLoggedIn = true;
           const sub = evaluateSubscription(user);
-          if (sub.isActive) {
+          if ((user.email && user.email.toLowerCase().trim() === ADMIN_EMAIL) || sub.isActive) {
             isVip = true;
           }
         }
@@ -1152,8 +1202,42 @@ app.post('/api/admin/login', async (req, res) => {
   return res.status(401).json({ success: false, message: 'Invalid username or password' });
 });
 
+// Middleware to require admin authentication (strictly sa812sn@gmail.com)
+async function requireAdminAuth(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '').trim() || (req.query.token ? req.query.token.trim() : '');
+  if (!token) {
+    return res.status(403).json({ success: false, message: 'Forbidden: Admin access token required' });
+  }
+
+  // Legacy fallback token
+  if (token === 'admin-auth-token-valid') {
+    return next();
+  }
+
+  try {
+    const user = await getCloudUserProfile(token);
+    if (user && user.email && user.email.toLowerCase().trim() === ADMIN_EMAIL) {
+      req.adminUser = user;
+      return next();
+    }
+  } catch (e) {}
+
+  try {
+    const db = await getDatabase();
+    const userId = getUserIdFromToken(token);
+    const localUser = (db.users || []).find(u => u.id === userId || u.id === token || u.email?.toLowerCase() === token.toLowerCase());
+    if (localUser && localUser.email && localUser.email.toLowerCase().trim() === ADMIN_EMAIL) {
+      req.adminUser = localUser;
+      return next();
+    }
+  } catch (e) {}
+
+  return res.status(403).json({ success: false, message: 'Forbidden: Admin access denied' });
+}
+
 // 5. Admin Upload Images (Thumbnail or Storyboard References)
-app.post('/api/admin/upload', upload.any(), async (req, res) => {
+app.post('/api/admin/upload', requireAdminAuth, upload.any(), async (req, res) => {
   const files = req.files || (req.file ? [req.file] : []);
   if (!files || files.length === 0) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
@@ -1191,7 +1275,7 @@ app.post('/api/admin/upload', upload.any(), async (req, res) => {
 });
 
 // 5b. Admin Get Single Prompt (Full Details with unredacted masterPrompt)
-app.get('/api/admin/prompts/:id', async (req, res) => {
+app.get('/api/admin/prompts/:id', requireAdminAuth, async (req, res) => {
   const db = await getDatabase();
   const prompt = (db.prompts || []).find(p => p.id === req.params.id || String(p.numericId) === req.params.id);
   if (!prompt) {
@@ -1215,7 +1299,7 @@ app.get('/api/admin/prompts/:id', async (req, res) => {
 });
 
 // 6. Admin Add New Prompt
-app.post('/api/admin/prompts', async (req, res) => {
+app.post('/api/admin/prompts', requireAdminAuth, async (req, res) => {
   const db = await getDatabase();
   const {
     title,
@@ -1281,7 +1365,7 @@ app.post('/api/admin/prompts', async (req, res) => {
 });
 
 // 7. Admin Edit Existing Prompt
-app.put('/api/admin/prompts/:id', async (req, res) => {
+app.put('/api/admin/prompts/:id', requireAdminAuth, async (req, res) => {
   const db = await getDatabase();
   const index = (db.prompts || []).findIndex(p => p.id === req.params.id || String(p.numericId) === req.params.id);
 
@@ -1336,7 +1420,7 @@ app.put('/api/admin/prompts/:id', async (req, res) => {
 });
 
 // 8. Admin Delete Prompt
-app.delete('/api/admin/prompts/:id', async (req, res) => {
+app.delete('/api/admin/prompts/:id', requireAdminAuth, async (req, res) => {
   const db = await getDatabase();
   const initialLength = (db.prompts || []).length;
   db.prompts = (db.prompts || []).filter(p => p.id !== req.params.id && String(p.numericId) !== req.params.id);
@@ -1350,7 +1434,7 @@ app.delete('/api/admin/prompts/:id', async (req, res) => {
 });
 
 // 9. Admin Add New Category
-app.post('/api/admin/categories', async (req, res) => {
+app.post('/api/admin/categories', requireAdminAuth, async (req, res) => {
   const db = await getDatabase();
   const { name } = req.body;
   if (!name || !name.trim()) {
@@ -1371,7 +1455,7 @@ app.post('/api/admin/categories', async (req, res) => {
 });
 
 // 10. Admin Delete Category
-app.delete('/api/admin/categories/:name', async (req, res) => {
+app.delete('/api/admin/categories/:name', requireAdminAuth, async (req, res) => {
   const db = await getDatabase();
   const catName = decodeURIComponent(req.params.name).toLowerCase();
   db.categories = (db.categories || []).filter(c => c.name.toLowerCase() !== catName);
@@ -1380,7 +1464,7 @@ app.delete('/api/admin/categories/:name', async (req, res) => {
 });
 
 // 11. Admin Get All Users (Live from Supabase Cloud)
-app.get('/api/admin/users', async (req, res) => {
+app.get('/api/admin/users', requireAdminAuth, async (req, res) => {
   try {
     let users = await listCloudUsers();
     const { search, status } = req.query;
@@ -1417,7 +1501,7 @@ app.get('/api/admin/users', async (req, res) => {
 });
 
 // 12. Admin Update User Subscription (Live in Supabase Cloud)
-app.post('/api/admin/users/:id/subscription', async (req, res) => {
+app.post('/api/admin/users/:id/subscription', requireAdminAuth, async (req, res) => {
   const { action = 'grant_1_month', durationDays = 30 } = req.body;
   const now = Date.now();
   const daysMs = (parseInt(durationDays) || 30) * 24 * 60 * 60 * 1000;
@@ -1482,7 +1566,7 @@ app.post('/api/admin/users/:id/subscription', async (req, res) => {
 });
 
 // 13. Admin Delete User (Live from Supabase Cloud)
-app.delete('/api/admin/users/:id', async (req, res) => {
+app.delete('/api/admin/users/:id', requireAdminAuth, async (req, res) => {
   try {
     await deleteCloudUser(req.params.id);
     res.json({ success: true, message: 'User deleted from cloud successfully' });
