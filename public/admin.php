@@ -728,35 +728,93 @@
       let p = allPrompts.find(item => item.id === promptId || String(item.numericId) === promptId);
       if (!p) return;
 
-      // If masterPrompt is omitted from lightweight list, fetch full details
-      if (!p.masterPrompt) {
-        try {
-          const res = await fetch(`/api/prompts/${promptId}`);
-          const data = await res.json();
-          if (data.success && data.prompt) {
-            p = data.prompt;
-          }
-        } catch (e) {}
-      }
-
       document.getElementById('editPromptId').value = p.id;
       document.getElementById('editTitle').value = p.title || '';
       document.getElementById('editCategory').value = p.category || '';
       document.getElementById('editType').value = p.type || 'free';
-      document.getElementById('editThumbnail').value = p.thumbnail || '';
-      document.getElementById('editMasterPrompt').value = p.masterPrompt || '';
+      const initialThumb = p.rawThumbnail || p.thumbnail || '';
+      document.getElementById('editThumbnail').value = initialThumb;
 
       const editPreviewImg = document.getElementById('editThumbPreviewImg');
       const editPreviewBox = document.getElementById('editThumbPreviewBox');
-      if (editPreviewImg && p.thumbnail) {
-        editPreviewImg.src = p.thumbnail;
+      if (editPreviewImg && initialThumb) {
+        editPreviewImg.src = initialThumb;
         if (editPreviewBox) editPreviewBox.style.display = 'block';
+      } else if (editPreviewBox) {
+        editPreviewBox.style.display = 'none';
       }
 
-      editStoryboardImages = Array.isArray(p.storyboardImages) ? [...p.storyboardImages] : (p.storyboardImages ? [p.storyboardImages] : []);
+      editStoryboardImages = Array.isArray(p.rawStoryboardImages || p.storyboardImages)
+        ? [...(p.rawStoryboardImages || p.storyboardImages)]
+        : (p.storyboardImages ? [p.storyboardImages] : []);
       renderStoryboardGallery('edit');
 
+      const masterPromptBox = document.getElementById('editMasterPrompt');
+      if (p.masterPrompt) {
+        masterPromptBox.value = p.masterPrompt;
+      } else {
+        masterPromptBox.value = 'Loading master prompt...';
+      }
+
       document.getElementById('editModalOverlay').classList.add('active');
+
+      // Fetch full prompt details with masterPrompt from admin endpoint
+      try {
+        const adminToken = localStorage.getItem('promptmaster_admin_token') || '';
+        let fullPrompt = null;
+
+        const res = await fetch(`/api/admin/prompts/${promptId}`, {
+          headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.prompt) {
+            fullPrompt = data.prompt;
+          }
+        }
+
+        // Fallback to /api/prompts/:id with admin token
+        if (!fullPrompt) {
+          const fbRes = await fetch(`/api/prompts/${promptId}?token=${encodeURIComponent(adminToken)}`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+          });
+          if (fbRes.ok) {
+            const fbData = await fbRes.json();
+            if (fbData.success && fbData.prompt) {
+              fullPrompt = fbData.prompt;
+            }
+          }
+        }
+
+        if (fullPrompt && fullPrompt.masterPrompt) {
+          p.masterPrompt = fullPrompt.masterPrompt;
+          if (fullPrompt.rawThumbnail) p.rawThumbnail = fullPrompt.rawThumbnail;
+          if (fullPrompt.rawStoryboardImages) p.rawStoryboardImages = fullPrompt.rawStoryboardImages;
+
+          masterPromptBox.value = fullPrompt.masterPrompt;
+          if (fullPrompt.title) document.getElementById('editTitle').value = fullPrompt.title;
+          if (fullPrompt.category) document.getElementById('editCategory').value = fullPrompt.category;
+          if (fullPrompt.type) document.getElementById('editType').value = fullPrompt.type;
+          if (fullPrompt.rawThumbnail || fullPrompt.thumbnail) {
+            const thumb = fullPrompt.rawThumbnail || fullPrompt.thumbnail;
+            document.getElementById('editThumbnail').value = thumb;
+            if (editPreviewImg) editPreviewImg.src = thumb;
+          }
+          if (fullPrompt.storyboardImages || fullPrompt.rawStoryboardImages) {
+            editStoryboardImages = Array.isArray(fullPrompt.rawStoryboardImages || fullPrompt.storyboardImages)
+              ? [...(fullPrompt.rawStoryboardImages || fullPrompt.storyboardImages)]
+              : [];
+            renderStoryboardGallery('edit');
+          }
+        } else if (masterPromptBox.value === 'Loading master prompt...') {
+          masterPromptBox.value = p.masterPrompt || '';
+        }
+      } catch (err) {
+        console.error('Error fetching full prompt details:', err);
+        if (masterPromptBox.value === 'Loading master prompt...') {
+          masterPromptBox.value = p.masterPrompt || '';
+        }
+      }
     }
 
     function closeEditModal() {
@@ -784,8 +842,14 @@
         const data = await res.json();
         if (data.success) {
           alert('Prompt updated successfully!');
+          const target = allPrompts.find(item => item.id === id || String(item.numericId) === id);
+          if (target) {
+            Object.assign(target, payload);
+          }
           closeEditModal();
           loadAdminData();
+        } else {
+          alert('Update failed: ' + data.message);
         }
       } catch(err) {
         alert('Update failed: ' + err.message);
