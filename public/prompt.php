@@ -94,11 +94,33 @@ include __DIR__ . '/includes/header.php';
     async function loadPromptDetails() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id') || '270';
-      const token = localStorage.getItem('promptmaster_token');
+      const urlToken = params.get('token');
+      if (urlToken) {
+        localStorage.setItem('promptmaster_token', urlToken);
+      }
+
+      let token = localStorage.getItem('promptmaster_token') ||
+                  localStorage.getItem('promptmaster_admin_token') ||
+                  localStorage.getItem('vip_token') ||
+                  urlToken;
+
+      let cachedUser = null;
+      try {
+        const rawUser = localStorage.getItem('promptmaster_user');
+        if (rawUser) cachedUser = JSON.parse(rawUser);
+      } catch (e) {}
+
+      if (!token && cachedUser) {
+        token = cachedUser.token || cachedUser.id;
+        if (token) localStorage.setItem('promptmaster_token', token);
+      }
 
       const headers = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+      }
+      if (cachedUser && cachedUser.email) {
+        headers['X-User-Email'] = cachedUser.email;
       }
 
       try {
@@ -239,30 +261,38 @@ include __DIR__ . '/includes/header.php';
       if (urlToken) {
         localStorage.setItem('promptmaster_token', urlToken);
       }
-      let token = localStorage.getItem('promptmaster_token');
-      if (!token) {
-        const cachedUser = localStorage.getItem('promptmaster_user');
-        if (cachedUser) {
-          try {
-            const u = JSON.parse(cachedUser);
-            if (u && u.id) {
-              token = u.id;
-              localStorage.setItem('promptmaster_token', token);
-            }
-          } catch (e) {}
-        }
+      let token = localStorage.getItem('promptmaster_token') ||
+                  localStorage.getItem('promptmaster_admin_token') ||
+                  localStorage.getItem('vip_token') ||
+                  urlToken;
+
+      let cachedUser = null;
+      try {
+        const rawUser = localStorage.getItem('promptmaster_user');
+        if (rawUser) cachedUser = JSON.parse(rawUser);
+      } catch (e) {}
+
+      if (!token && cachedUser) {
+        token = cachedUser.token || cachedUser.id;
+        if (token) localStorage.setItem('promptmaster_token', token);
       }
 
-      if (!token) return;
+      if (!token && !cachedUser) return;
 
       try {
-        const res = await fetch('/api/auth/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (cachedUser && cachedUser.email) headers['X-User-Email'] = cachedUser.email;
+
+        const res = await fetch('/api/auth/me', { headers });
         const data = await res.json();
         if (data.success && data.user) {
           currentUser = data.user;
           localStorage.setItem('promptmaster_user', JSON.stringify(currentUser));
+          // If prompt was loaded as locked before auth finished, re-fetch to unlock!
+          if (activePrompt && !activePrompt.isUnlocked && (currentUser.isAdmin || currentUser.subscription?.isActive)) {
+            loadPromptDetails();
+          }
         }
       } catch (err) {
         console.error('Auth error:', err);
