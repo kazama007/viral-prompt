@@ -45,7 +45,7 @@
     })();
   </script>
 </head>
-<body style="background-color:var(--bg);background-image:radial-gradient(ellipse 90% 550px at 50% -30px, rgba(124, 92, 255, 0.12), transparent 70%), linear-gradient(180deg, #ffffff 0%, #f9faff 350px, #f6f8fd 850px, #f3f5fc 100%);background-attachment:fixed;">
+<body style="background:#f4f3f9;">
 
   <header class="site-header">
     <div class="container header-inner admin-container">
