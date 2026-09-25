@@ -1479,7 +1479,8 @@ app.delete('/api/admin/categories/:name', requireAdminAuth, async (req, res) => 
 // 11. Admin Get All Users (Live from Supabase Cloud)
 app.get('/api/admin/users', requireAdminAuth, async (req, res) => {
   try {
-    let users = await listCloudUsers();
+    const allUsers = await listCloudUsers();
+    let users = allUsers;
     const { search, status } = req.query;
 
     if (search && search.trim()) {
@@ -1494,7 +1495,6 @@ app.get('/api/admin/users', requireAdminAuth, async (req, res) => {
       users = users.filter(u => u.subscription?.status === status);
     }
 
-    const allUsers = await listCloudUsers();
     const stats = {
       totalUsers: allUsers.length,
       activeVipUsers: allUsers.filter(u => u.subscription?.status === 'active').length,

@@ -156,7 +156,7 @@
       "numericId": 292,
       "title": "30 SEC KAI & NAIRO 3D PIXAR ART VIRAL PROMPT PART 1,2,3",
       "category": "Art & Animation",
-      "type": "free",
+      "type": "premium",
       "promptCountBadge": "🗂 1 prompt",
       "thumbnail": "https://raw.githubusercontent.com/kazama007/prompt-images/main/upload_1788862952848_132155_prompt_292_thumb.webp",
       "storyboardImages": [
@@ -174,8 +174,8 @@
       "views": 0,
       "likes": 0,
       "created": "07 Sept 2026",
-      "updated": "07 Sept 2026",
-      "updatedDate": "07 Sept 2026",
+      "updated": "25 Sept 2026",
+      "updatedDate": "25 Sept 2026",
       "createdAt": "2026-09-07T07:14:58.339Z"
     },
     {
@@ -6681,7 +6681,7 @@
       "isAdmin": true,
       "time": "30 Aug 2026 · 07:01",
       "content": "## MASTER PROMPT USE GUIDE\n\nA Master Prompt is not a normal one-time prompt. It is a complete reusable AI system where the character, camera style, story DNA, duration, audio, continuity, negative rules, and output format are already defined.\n\n**Simple workflow:**\n\n1. Open a new ChatGPT or Claude chat and paste the complete Master Prompt.\n2. Type: **“Give me 10 topics.”**\n3. Select your favorite idea: **“Topic 4.”**\n4. Then type: **“Make full prompt.”**\n5. For changes, do not paste the full Master Prompt again. Simply say: **“Keep everything the same, change the location,” “make the hook stronger,” “make it 15 seconds,” “make the ending funnier,” or “keep the same character.”**\n6. For more ideas, type: **“Give me 10 more topics”** or **“Next video.”**\n\nThink of the Master Prompt as your permanent **Creative Director + Script Writer + Camera Director + Prompt Engineer.**\n\n**The Master Prompt defines HOW to create.\nYour next command defines WHAT to create.**\n\nFor a new chat, paste the Master Prompt again for the safest workflow.",
-      "likes": 5,
+      "likes": 7,
       "likedBy": [],
       "comments": [
         {
