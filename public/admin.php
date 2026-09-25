@@ -184,11 +184,6 @@
                         placeholder="SYSTEM PROMPT: ...&#10;SCENE BREAKDOWN: ...&#10;CAMERA DIRECTION: ...&#10;LIGHTING: ..." required></textarea>
             </div>
 
-            <div class="form-group">
-              <label>NEGATIVE PROMPT RULES</label>
-              <textarea id="pNegativePrompt" rows="2" class="form-control" style="font-family:monospace;font-size:13px;"
-                        placeholder="cartoon, low quality, jitter, blurred hands, distorted face"></textarea>
-            </div>
 
             <div class="form-group">
               <label>COMPATIBLE AI TOOLS</label>
@@ -656,7 +651,6 @@
         storyboardImages: publishStoryboardImages,
         summary: document.getElementById('pSummary').value,
         masterPrompt: document.getElementById('pMasterPrompt').value,
-        negativePrompt: document.getElementById('pNegativePrompt').value,
         tools: document.getElementById('pTools').value.split(',').map(s => s.trim())
       };
 

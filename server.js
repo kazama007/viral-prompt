@@ -691,7 +691,9 @@ app.get('/api/prompts/:id', async (req, res) => {
 const renderedPageCache = new Map();
 
 function renderPhpFile(filePath, context = {}) {
-  const cacheKey = filePath;
+  if (!fs.existsSync(filePath)) return null;
+  const mtime = fs.statSync(filePath).mtimeMs;
+  const cacheKey = `${filePath}:${mtime}`;
   if (renderedPageCache.has(cacheKey)) {
     return renderedPageCache.get(cacheKey);
   }
@@ -800,7 +802,11 @@ function renderPhpFile(filePath, context = {}) {
 }
 
 function sendPhpOrHtml(req, res, baseName) {
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+  if (baseName === 'admin') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+  }
   const phpPath = path.join(__dirname, 'public', `${baseName}.php`);
   if (fs.existsSync(phpPath)) {
     const rendered = renderPhpFile(phpPath);
@@ -1222,7 +1228,7 @@ app.post('/api/admin/prompts', async (req, res) => {
     storyboardImages: cleanStoryboard,
     summary: summary ? summary.trim() : 'Viral AI video engine system ready to copy and paste.',
     masterPrompt: masterPrompt.trim(),
-    negativePrompt: negativePrompt ? negativePrompt.trim() : 'cartoon, low quality, jitter, blurred objects',
+    negativePrompt: negativePrompt ? negativePrompt.trim() : null,
     tools: Array.isArray(tools) ? tools : ['Kling AI', 'Seedance', 'Runway Gen-3'],
     views: 0,
     likes: 0,
